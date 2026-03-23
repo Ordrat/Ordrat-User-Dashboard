@@ -2,7 +2,7 @@
 
 ## Project
 
-Next.js 15.3 / React 19 / Tailwind CSS 4 seller dashboard. Backend is a **.NET API** (`https://testapi.ordrat.com`) — this is **frontend-only**. No full-stack, no Prisma for business logic.
+Next.js 16.x / React 19 / Tailwind CSS 4 seller dashboard. Backend is a **.NET API** (`https://api.ordrat.com`) — this is **frontend-only**. No full-stack, no Prisma for business logic.
 
 **Refactoring source**: `https://github.com/Galal-Elsayed/Ordrat-Old-Dashboard`
 When implementing any auth or existing feature, check the old repo first — it has the proven logic, endpoints, and flow. Copy and adapt to this project's stack (Zod instead of Yup, `fetch` instead of Axios, NextAuth session instead of raw cookies, no reCAPTCHA).
@@ -14,7 +14,7 @@ This project is a **monorepo with a rich shared component library**. **NEVER bui
 Key components:
 - **`components/ui/input-otp.tsx`** — OTP input (`InputOTP`, `InputOTPGroup`, `InputOTPSlot`, `InputOTPSeparator`) — wraps `input-otp` library
 - **`components/ui/sonner.tsx`** — Toast notifications (`Toaster` in root layout; use `import { toast } from 'sonner'` in pages)
-- **`components/ui/alert.tsx`** — Inline alerts (`Alert`, `AlertIcon`, `AlertTitle`) with `variant="destructive"` and `onClose` prop
+- **`components/ui/alert.tsx`** — Inline alerts (`Alert`, `AlertIcon`, `AlertTitle`) with `variant="destructive"` and `appearance="light"` props
 - **`components/ui/button.tsx`** — Button with `variant`, `mode`, `asChild` props
 - **`components/ui/form.tsx`** — React Hook Form wrappers (`Form`, `FormField`, `FormItem`, `FormLabel`, `FormControl`, `FormMessage`)
 - **`components/ui/input.tsx`** — Styled text/password input
@@ -27,28 +27,81 @@ The `Toaster` is already mounted in `app/layout.tsx` — **do not add it again**
 
 ## Active Technologies
 
-- **Framework**: Next.js 15.3 (App Router)
+- **Framework**: Next.js 16.x (App Router)
 - **UI**: React 19, Tailwind CSS 4, ReUI + Metronic 9 component system
+- **Layout**: **layout-14 is the only dashboard layout** — all others removed
 - **Auth**: NextAuth v4 (`next-auth`) — Credentials provider calling .NET backend
 - **Forms**: React Hook Form + Zod
 - **Data fetching**: TanStack Query
 - **Tables**: TanStack Table
 - **Charts**: ApexCharts
-- **ORM**: Prisma + PostgreSQL (user management features only — **not** for auth)
-- **Storage**: AWS S3 (`@aws-sdk/client-s3`)
 
-## Auth Endpoints (Ordrat .NET Backend)
+## App Structure
+
+```
+app/
+├── layout.tsx                    # Root layout — SessionProvider + ThemeProvider
+├── page.tsx                      # Redirects to /dashboard
+├── (auth)/                       # Auth pages — no sidebar, centered layout
+│   ├── layout.tsx
+│   ├── signin/page.tsx
+│   ├── forgot-password/page.tsx
+│   ├── verify-otp/page.tsx
+│   └── change-password/page.tsx
+├── (dashboard)/                  # Protected pages — wrapped in Layout14
+│   ├── layout.tsx                # useSession guard + Layout14 wrapper
+│   └── dashboard/page.tsx        # Main dashboard page
+├── unauthorized/page.tsx
+└── api/auth/[...nextauth]/
+    ├── route.ts
+    └── auth-options.ts
+
+lib/
+├── ordrat-api/                   # .NET backend API functions (grouped by domain)
+│   ├── auth.ts                   # loginWithCredentials(), refreshAccessToken()
+│   └── schemas.ts                # Zod schemas for backend responses
+└── api-client.ts                 # ordratFetch() — fetch wrapper with Bearer token + 401 retry
+
+config/
+├── roles.ts                      # KNOWN_ROLES, ROUTE_ROLES, helpers
+├── layout-14.config.tsx          # Sidebar menu config for layout-14
+└── types.ts                      # MenuConfig type
+
+components/
+├── layouts/layout-14/            # Only layout in use
+├── providers/session-provider.tsx
+└── ui/                           # ~79 shared UI components
+```
+
+## Auth Endpoints (Ordrat .NET Backend — `https://api.ordrat.com`)
 
 | Method | Endpoint | Used for |
 |---|---|---|
 | `POST` | `/api/Auth/Login` | Sign in — body: `{ email, password }` |
-| `POST` | `/api/Auth/RefreshAccessToken` | Token refresh — `refreshToken` as **header** |
+| `POST` | `/api/Auth/RefreshAccessToken` | Token refresh — `refreshToken` as **header** (not body) |
 | `POST` | `/api/Auth/ForgetPassword` | Request password reset email — body: `{ email }` |
 | `POST` | `/api/Auth/VerifyForgetCode` | Verify OTP — body: `{ email, verificationCode }` → returns `{ resetToken }` |
 | `POST` | `/api/Auth/ResendVerificationCode` | Resend OTP — body: `{ email }` |
 | `PATCH` | `/api/Auth/ResetPassword` | Set new password — body: `{ email, newPassword, resetToken }` |
 
-Forget-password flow: `ForgetPassword` → save `ValidationEmail` to localStorage → redirect `/verify-otp` → `VerifyForgetCode` → save `ResetToken` to localStorage → redirect `/change-password` → `ResetPassword` → redirect `/signin`.
+**Forget-password flow**:
+1. `POST /api/Auth/ForgetPassword` → save `ValidationEmail` to localStorage → redirect `/verify-otp`
+2. `POST /api/Auth/VerifyForgetCode` → save `ResetToken` to localStorage → redirect `/change-password`
+3. `PATCH /api/Auth/ResetPassword` → clear localStorage → redirect `/signin`
+
+## Adding New API Domains
+
+Put all .NET API calls inside `lib/ordrat-api/` grouped by domain:
+```
+lib/ordrat-api/
+├── auth.ts        # Auth endpoints
+├── orders.ts      # Order endpoints (future)
+├── products.ts    # Product endpoints (future)
+└── schemas.ts     # All Zod schemas
+```
+
+Use `ordratFetch()` from `lib/api-client.ts` for all client-side API calls (handles Bearer token + 401 retry).
+Use raw `fetch` with `process.env.BACKEND_API_URL` for server-side calls (in NextAuth, Server Actions).
 
 ## Key Files
 
@@ -67,17 +120,19 @@ Forget-password flow: `ForgetPassword` → save `ValidationEmail` to localStorag
 ```bash
 npm run dev        # start dev server
 npm run build      # production build (also runs TS type check)
-npm run lint       # ESLint (note: has pre-existing AJV config issue unrelated to app code)
+npm run lint       # ESLint
 npx tsc --noEmit   # TypeScript type check only
 ```
 
 ## Architecture Notes
 
-- **Route protection** is server-side via `proxy.ts` (`export default function proxy()`). Never use client-side `useEffect` redirects for auth.
+- **Route protection** is server-side via `proxy.ts` (`export default function proxy()`). The dashboard layout also has a client-side `useSession` guard as a fallback.
 - **`BACKEND_API_URL`** is server-only. **`NEXT_PUBLIC_BACKEND_API_URL`** is the client-side copy. Never hardcode the API URL.
 - **`userType`** from the .NET backend comes as a number — coerced to string via `z.coerce.string()` in schemas.
 - **Token refresh** uses the `refreshToken` as an HTTP **header** (not body) on `POST /api/Auth/RefreshAccessToken`.
 - **Roles** are filtered against `KNOWN_ROLES` before storage. Unknown role strings from the backend are silently discarded.
+- **Incomplete seller setup**: if `shopId` is empty after login, redirect to `https://ordrat.com/seller-setup?sellerId=<id>`.
+- **Layout-14 only** — all other Metronic layout examples removed. Only `components/layouts/layout-14/` and `config/layout-14.config.tsx` remain.
 
 ---
 

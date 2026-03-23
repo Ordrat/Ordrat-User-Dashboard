@@ -16,10 +16,17 @@ export const authOptions: AuthOptions = {
           throw new Error('Email and password are required');
         }
 
-        const data = await loginWithCredentials(
-          credentials.email,
-          credentials.password,
-        );
+        let data;
+        try {
+          data = await loginWithCredentials(
+            credentials.email,
+            credentials.password,
+          );
+        } catch (err) {
+          // Re-throw Error instances so NextAuth passes the message to the client
+          if (err instanceof Error) throw err;
+          throw new Error('Service unavailable, please try again');
+        }
 
         // Incomplete seller setup — redirect to onboarding
         if (!data.shopId) {
@@ -28,7 +35,8 @@ export const authOptions: AuthOptions = {
           );
         }
 
-        const mainBranch = data.branches.find((b) => b.isMain) ?? data.branches[0] ?? null;
+        const mainBranch =
+          data.branches.find((b) => b.isMain) ?? data.branches[0] ?? null;
 
         return {
           id: data.id,
@@ -56,7 +64,7 @@ export const authOptions: AuthOptions = {
           ...token,
           accessToken: user.accessToken,
           refreshToken: user.refreshToken,
-          accessTokenExpiresAt: Date.now() + 55 * 60 * 1000, // 55 min conservative estimate
+          accessTokenExpiresAt: Date.now() + 55 * 60 * 1000,
           shopId: user.shopId,
           sellerId: user.sellerId,
           name: user.name ?? '',
@@ -93,7 +101,6 @@ export const authOptions: AuthOptions = {
           error: undefined,
         };
       } catch {
-        // Refresh failed — mark error; proxy.ts will sign the user out
         return { ...token, error: 'RefreshAccessTokenError' as const };
       }
     },

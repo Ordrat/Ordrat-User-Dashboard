@@ -9,25 +9,28 @@ export async function loginWithCredentials(
   email: string,
   password: string,
 ): Promise<LoginResponseType> {
-  const res = await fetch(
-    `${process.env.BACKEND_API_URL}/api/Auth/Login`,
-    {
+  let res: Response;
+
+  try {
+    res = await fetch(`${process.env.BACKEND_API_URL}/api/Auth/Login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
-    },
-  );
+    });
+  } catch (err) {
+    // Network / DNS / SSL error
+    console.error('[loginWithCredentials] fetch error:', err);
+    throw new Error('Service unavailable, please try again');
+  }
 
   if (res.status === 401 || res.status === 404) {
     throw new Error('Invalid email or password');
   }
 
-  if (res.status === 400) {
-    throw new Error('Invalid request');
-  }
-
   if (!res.ok) {
-    throw new Error('Service unavailable, please try again');
+    // 400, 500, etc — surface the status for debugging
+    console.error('[loginWithCredentials] API error:', res.status, await res.text().catch(() => ''));
+    throw new Error('Invalid email or password');
   }
 
   const data = await res.json();
@@ -37,16 +40,22 @@ export async function loginWithCredentials(
 export async function refreshAccessToken(
   refreshToken: string,
 ): Promise<RefreshResponseType> {
-  const res = await fetch(
-    `${process.env.BACKEND_API_URL}/api/Auth/RefreshAccessToken`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        refreshToken,
+  let res: Response;
+
+  try {
+    res = await fetch(
+      `${process.env.BACKEND_API_URL}/api/Auth/RefreshAccessToken`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          refreshToken,
+        },
       },
-    },
-  );
+    );
+  } catch {
+    throw new Error('RefreshAccessTokenError');
+  }
 
   if (!res.ok) {
     throw new Error('RefreshAccessTokenError');

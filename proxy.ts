@@ -5,7 +5,7 @@ import { userHasRouteAccess } from '@/config/roles';
 const PUBLIC_PATHS = [
   '/signin',
   '/signup',
-  '/reset-password',
+  '/forgot-password',
   '/verify-otp',
   '/change-password',
   '/verify-email',

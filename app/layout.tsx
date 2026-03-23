@@ -5,14 +5,15 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from '@/components/ui/sonner';
 import { Metadata } from 'next';
 import { ThemeProvider } from 'next-themes';
+import { SessionProvider } from '@/components/providers/session-provider';
 
 import '@/styles/globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | Metronic',
-    default: 'Metronic', // a default is required when creating a template
+    template: '%s | Ordrat',
+    default: 'Ordrat Dashboard',
   },
 };
 
@@ -32,16 +33,18 @@ export default async function RootLayout({
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
-          storageKey="nextjs-theme"
+          storageKey="ordrat-theme"
           enableSystem
           disableTransitionOnChange
           enableColorScheme
         >
-          <TooltipProvider delayDuration={0}>
-            <Suspense>{children}</Suspense>
-            <Toaster />
-          </TooltipProvider>
-        </ThemeProvider>       
+          <SessionProvider>
+            <TooltipProvider delayDuration={0}>
+              <Suspense>{children}</Suspense>
+              <Toaster />
+            </TooltipProvider>
+          </SessionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

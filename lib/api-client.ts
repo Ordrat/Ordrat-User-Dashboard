@@ -1,29 +1,29 @@
-'use client';
-
 import { getSession, signOut } from 'next-auth/react';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL ?? '';
 
-interface FetchOptions extends RequestInit {
+interface OrdratFetchOptions extends RequestInit {
   _retry?: boolean;
 }
 
 export async function ordratFetch<T = unknown>(
   path: string,
-  options: FetchOptions = {},
+  options: OrdratFetchOptions = {},
 ): Promise<T> {
   const session = await getSession();
   const token = session?.accessToken;
 
-  const headers: HeadersInit = {
+  const { _retry, ...fetchOptions } = options;
+
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(options.headers ?? {}),
+    ...(fetchOptions.headers as Record<string, string> | undefined),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 
-  const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+  const res = await fetch(`${BASE_URL}${path}`, { ...fetchOptions, headers });
 
-  if (res.status === 401 && !options._retry) {
+  if (res.status === 401 && !_retry) {
     // Force session refresh then retry once
     const refreshed = await getSession();
     if (refreshed?.accessToken && refreshed.accessToken !== token) {
@@ -31,7 +31,7 @@ export async function ordratFetch<T = unknown>(
         ...options,
         _retry: true,
         headers: {
-          ...options.headers,
+          ...(options.headers as Record<string, string> | undefined),
           Authorization: `Bearer ${refreshed.accessToken}`,
         },
       });
@@ -43,7 +43,13 @@ export async function ordratFetch<T = unknown>(
   }
 
   if (!res.ok) {
-    throw new Error(`API error ${res.status}`);
+    throw new Error(`API error ${res.status}: ${path}`);
+  }
+
+  // Handle empty responses (204 No Content)
+  const contentType = res.headers.get('content-type');
+  if (!contentType?.includes('application/json')) {
+    return undefined as T;
   }
 
   return res.json() as Promise<T>;
