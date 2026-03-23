@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { toAbsoluteUrl } from '@/lib/helpers';
+import { useSession, signOut } from 'next-auth/react';
 import { cn } from '@/lib/utils';
 import {
   BarChart3,
@@ -26,7 +26,6 @@ import {
 import {
   Avatar,
   AvatarFallback,
-  AvatarImage,
   AvatarIndicator,
   AvatarStatus,
 } from '@/components/ui/avatar';
@@ -47,7 +46,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
@@ -111,6 +109,11 @@ const menuItems = [
 export function SidebarPrimary() {
   const pathname = usePathname();
   const [selectedMenuItem, setSelectedMenuItem] = useState(menuItems[1]);
+  const { data: session } = useSession();
+
+  const userName = session?.user?.name ?? 'User';
+  const userEmail = session?.user?.email ?? '';
+  const initials = userName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
 
   useEffect(() => {
     menuItems.forEach((item) => {
@@ -172,8 +175,7 @@ export function SidebarPrimary() {
         <DropdownMenu>
           <DropdownMenuTrigger className="cursor-pointer mb-2.5">
             <Avatar className="size-7">
-              <AvatarImage src={toAbsoluteUrl('/media/avatars/300-2.png')} alt="@reui" />
-              <AvatarFallback>CH</AvatarFallback>
+              <AvatarFallback>{initials}</AvatarFallback>
               <AvatarIndicator className="-end-2 -top-2">
                 <AvatarStatus variant="online" className="size-2.5" />
               </AvatarIndicator>
@@ -183,16 +185,14 @@ export function SidebarPrimary() {
             {/* User Information Section */}
             <div className="flex items-center gap-3 px-3 py-2">
               <Avatar>
-                <AvatarImage src={toAbsoluteUrl('/media/avatars/300-2.png')} alt="@reui" />
-                <AvatarFallback>CH</AvatarFallback>
+                <AvatarFallback>{initials}</AvatarFallback>
                 <AvatarIndicator className="-end-1.5 -top-1.5">
                   <AvatarStatus variant="online" className="size-2.5" />
                 </AvatarIndicator>
               </Avatar>
               <div className="flex flex-col items-start">
-                <span className="text-sm font-semibold text-foreground">Chris Harris</span>
-                <span className="text-xs text-muted-foreground">Senior Developer</span>
-                <Badge variant="success" appearance="outline" size="sm" className="mt-1">Pro Plan</Badge>
+                <span className="text-sm font-semibold text-foreground">{userName}</span>
+                <span className="text-xs text-muted-foreground">{userEmail}</span>
               </div>
             </div>
             
@@ -207,7 +207,6 @@ export function SidebarPrimary() {
             <DropdownMenuItem>
               <Target/>
               <span>My Projects</span>
-              <Badge variant="info" size="sm" appearance="outline" className="ms-auto">3</Badge>
             </DropdownMenuItem>
 
             <DropdownMenuItem>
@@ -262,7 +261,7 @@ export function SidebarPrimary() {
             <DropdownMenuSeparator />
 
             {/* Action Items */}
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/signin' })}>
               <LogOut/>
               <span>Sign out</span>
             </DropdownMenuItem>

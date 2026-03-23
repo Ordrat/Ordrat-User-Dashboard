@@ -1,10 +1,10 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { SidebarWorkspacesMenu } from "./sidebar-workspaces-menu";
-import { SidebarCommunities } from "./layout/components/sidebar-communities";
-import { SidebarPrimaryMenu } from "./layout/components/sidebar-primary-menu";
-import { SidebarResourcesMenu } from "./layout/components/sidebar-resources-menu";
-import { SidebarSearch } from "./layout/components/sidebar-search";
+import { SidebarWorkspacesMenu } from "./layout/sidebar-workspaces-menu";
+import { SidebarCommunities } from "./layout/sidebar-communities";
+import { SidebarPrimaryMenu } from "./layout/sidebar-primary-menu";
+import { SidebarResourcesMenu } from "./layout/sidebar-resources-menu";
+import { SidebarSearch } from "./layout/sidebar-search";
 
 export function SidebarSecondary() {
   return (

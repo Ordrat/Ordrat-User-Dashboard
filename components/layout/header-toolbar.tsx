@@ -14,11 +14,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input, InputWrapper } from "@/components/ui/input";
 import { useLayout } from "./context";
-import { toAbsoluteUrl } from "@/lib/helpers";
 import {
   Avatar,
   AvatarFallback,
-  AvatarImage,
   AvatarIndicator,
   AvatarStatus,
 } from '@/components/ui/avatar';
@@ -30,13 +28,19 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useTheme } from "next-themes";
+import { useSession, signOut } from "next-auth/react";
 
 export function HeaderToolbar() {
   const { isMobile } = useLayout();
   const { theme, setTheme } = useTheme();
-  
+  const { data: session } = useSession();
+
+  const userName = session?.user?.name ?? 'User';
+  const userEmail = session?.user?.email ?? '';
+  const initials = userName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+
   const handleInputChange = () => {};
-  
+
   const toggleTheme = () => {
     setTheme(theme === "light" ? "dark" : "light");
   };
@@ -70,8 +74,7 @@ export function HeaderToolbar() {
       <DropdownMenu>
         <DropdownMenuTrigger className="cursor-pointer">
           <Avatar className="size-7">
-            <AvatarImage src={toAbsoluteUrl('/media/avatars/300-2.png')} alt="@reui" />
-            <AvatarFallback>CH</AvatarFallback>
+            <AvatarFallback>{initials}</AvatarFallback>
             <AvatarIndicator className="-end-2 -top-2">
               <AvatarStatus variant="online" className="size-2.5" />
             </AvatarIndicator>
@@ -81,21 +84,19 @@ export function HeaderToolbar() {
           {/* User Information Section */}
           <div className="flex items-center gap-3 px-3 py-2">
             <Avatar>
-              <AvatarImage src={toAbsoluteUrl('/media/avatars/300-2.png')} alt="@reui" />
-              <AvatarFallback>CH</AvatarFallback>
+              <AvatarFallback>{initials}</AvatarFallback>
               <AvatarIndicator className="-end-1.5 -top-1.5">
                 <AvatarStatus variant="online" className="size-2.5" />
               </AvatarIndicator>
             </Avatar>
             <div className="flex flex-col items-start">
-              <span className="text-sm font-semibold text-foreground">Chris Harris</span>
-              <span className="text-xs text-muted-foreground">Senior Developer</span>
+              <span className="text-sm font-semibold text-foreground">{userName}</span>
+              <span className="text-xs text-muted-foreground">{userEmail}</span>
             </div>
           </div>
-          
+
           <DropdownMenuSeparator />
 
-          {/* User Actions */}
           <DropdownMenuItem>
             <User/>
             <span>Profile</span>
@@ -108,7 +109,6 @@ export function HeaderToolbar() {
 
           <DropdownMenuSeparator />
 
-          {/* Theme Toggle */}
           <DropdownMenuItem onClick={toggleTheme}>
             {theme === "light" ? <Moon className="size-4" /> : <Sun className="size-4" />}
             <span>{theme === "light" ? "Dark mode" : "Light mode"}</span>
@@ -116,8 +116,7 @@ export function HeaderToolbar() {
 
           <DropdownMenuSeparator />
 
-          {/* Action Items */}
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/signin' })}>
             <LogOut/>
             <span>Sign out</span>
           </DropdownMenuItem>

@@ -24,15 +24,9 @@ export const authOptions: AuthOptions = {
           );
         } catch (err) {
           // Re-throw Error instances so NextAuth passes the message to the client
+          console.error('[authorize] loginWithCredentials error:', err);
           if (err instanceof Error) throw err;
           throw new Error('Service unavailable, please try again');
-        }
-
-        // Incomplete seller setup — redirect to onboarding
-        if (!data.shopId) {
-          throw new Error(
-            `REDIRECT:https://ordrat.com/seller-setup?sellerId=${data.id}`,
-          );
         }
 
         const mainBranch =

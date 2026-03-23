@@ -7,10 +7,12 @@ import { z } from 'zod';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { Eye, EyeOff, LoaderCircle, TriangleAlert } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Form,
   FormControl,
@@ -19,11 +21,11 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { TriangleAlert, Eye, EyeOff, ShoppingBag } from 'lucide-react';
 
 const signinSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Enter a valid email'),
   password: z.string().min(1, 'Password is required'),
+  rememberMe: z.boolean(),
 });
 
 type SigninFormValues = z.infer<typeof signinSchema>;
@@ -37,7 +39,7 @@ export default function SigninPage() {
 
   const form = useForm<SigninFormValues>({
     resolver: zodResolver(signinSchema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { email: '', password: '', rememberMe: false },
   });
 
   const { isSubmitting } = form.formState;
@@ -74,170 +76,119 @@ export default function SigninPage() {
   }
 
   return (
-    <div className="flex min-h-screen">
-      {/* ── Left panel: form ── */}
-      <div className="flex flex-1 flex-col items-center justify-center bg-background px-6 py-12 lg:flex-none lg:w-[480px] xl:w-[520px]">
-        <div className="w-full max-w-sm">
-          {/* Logo */}
-          <div className="mb-8 flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-              <ShoppingBag className="size-5 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-semibold tracking-tight">Ordrat</span>
-          </div>
-
-          <div className="mb-7 space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
-            <p className="text-sm text-muted-foreground">
-              Enter your credentials to access your dashboard
-            </p>
-          </div>
-
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {serverError && (
-                <Alert variant="destructive" appearance="light">
-                  <AlertIcon>
-                    <TriangleAlert />
-                  </AlertIcon>
-                  <AlertTitle>{serverError}</AlertTitle>
-                </Alert>
-              )}
-
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="seller@example.com"
-                        autoComplete="email"
-                        variant="lg"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center justify-between">
-                      <FormLabel>Password</FormLabel>
-                      <Link
-                        href="/forgot-password"
-                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        Forgot Password?
-                      </Link>
-                    </div>
-                    <FormControl>
-                      <div className="relative">
-                        <Input
-                          type={showPassword ? 'text' : 'password'}
-                          placeholder="••••••••"
-                          autoComplete="current-password"
-                          variant="lg"
-                          className="pr-10"
-                          {...field}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword((v) => !v)}
-                          className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground"
-                          tabIndex={-1}
-                        >
-                          {showPassword ? (
-                            <EyeOff className="size-4" />
-                          ) : (
-                            <Eye className="size-4" />
-                          )}
-                        </button>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <Button
-                type="submit"
-                variant="primary"
-                className="w-full h-10 text-sm font-medium mt-2"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Signing in…' : 'Continue'}
-              </Button>
-            </form>
-          </Form>
-        </div>
-      </div>
-
-      {/* ── Right panel: visual ── */}
-      <div className="relative hidden flex-1 flex-col justify-between overflow-hidden bg-muted p-12 lg:flex">
-        {/* Background decorative grid */}
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-background to-muted" />
-
-        {/* Top logo */}
-        <div className="relative flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <ShoppingBag className="size-5 text-primary-foreground" />
-          </div>
-          <span className="text-xl font-semibold tracking-tight">Ordrat</span>
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="block w-full space-y-5"
+      >
+        <div className="space-y-1.5 pb-3">
+          <h1 className="text-2xl font-semibold tracking-tight text-center">
+            Sign in to Ordrat
+          </h1>
         </div>
 
-        {/* Center content */}
-        <div className="relative space-y-4 max-w-lg">
-          <h2 className="text-3xl font-semibold tracking-tight leading-snug">
-            Secure Dashboard Access
-          </h2>
-          <p className="text-muted-foreground text-base leading-relaxed">
-            A robust authentication gateway ensuring secure and efficient
-            access to your Ordrat seller dashboard.
-          </p>
+        {serverError && (
+          <Alert variant="destructive" appearance="light">
+            <AlertIcon>
+              <TriangleAlert />
+            </AlertIcon>
+            <AlertTitle>{serverError}</AlertTitle>
+          </Alert>
+        )}
 
-          {/* Feature list */}
-          <ul className="mt-6 space-y-3 text-sm text-muted-foreground">
-            {[
-              'Manage orders and track deliveries in real-time',
-              'Control your product catalog and inventory',
-              'Access sales analytics and performance reports',
-              'Manage staff roles and branch settings',
-            ].map((item) => (
-              <li key={item} className="flex items-start gap-2.5">
-                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
-                  <svg
-                    viewBox="0 0 12 12"
-                    fill="none"
-                    className="size-2.5"
-                  >
-                    <path
-                      d="M2 6l3 3 5-5"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </span>
-                {item}
-              </li>
-            ))}
-          </ul>
-        </div>
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input
+                  type="email"
+                  placeholder="Your email"
+                  autoComplete="email"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-        {/* Bottom tagline */}
-        <div className="relative text-xs text-muted-foreground/60">
-          © {new Date().getFullYear()} Ordrat. All rights reserved.
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <div className="flex justify-between items-center gap-2.5">
+                <FormLabel>Password</FormLabel>
+                <Link
+                  href="/forgot-password"
+                  className="text-sm font-semibold text-foreground hover:text-primary"
+                >
+                  Forgot Password?
+                </Link>
+              </div>
+              <div className="relative">
+                <Input
+                  placeholder="Your password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  {...field}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  mode="icon"
+                  size="sm"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute end-0 top-1/2 -translate-y-1/2 h-7 w-7 me-1.5 bg-transparent!"
+                  tabIndex={-1}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? (
+                    <EyeOff className="text-muted-foreground" />
+                  ) : (
+                    <Eye className="text-muted-foreground" />
+                  )}
+                </Button>
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="rememberMe"
+          render={({ field }) => (
+            <FormItem>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="remember-me"
+                  checked={field.value}
+                  onCheckedChange={(checked) => field.onChange(!!checked)}
+                />
+                <label
+                  htmlFor="remember-me"
+                  className="text-sm leading-none text-muted-foreground cursor-pointer"
+                >
+                  Remember me
+                </label>
+              </div>
+            </FormItem>
+          )}
+        />
+
+        <div className="flex flex-col gap-2.5">
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <LoaderCircle className="size-4 animate-spin" />
+            ) : null}
+            Continue
+          </Button>
         </div>
-      </div>
-    </div>
+      </form>
+    </Form>
   );
 }
