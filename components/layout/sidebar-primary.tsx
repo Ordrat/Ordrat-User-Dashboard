@@ -59,8 +59,8 @@ const menuItems = [
   {
     icon: BarChart3,
     tooltip: 'Dashboard',
-    path: '/layout-14',
-    rootPath: '/layout-14'
+    path: '/dashboard',
+    rootPath: '/dashboard'
   },
   {
     icon: Settings,

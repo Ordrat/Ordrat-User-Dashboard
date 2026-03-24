@@ -1,52 +1,46 @@
 import { MenuConfig } from "@/config/types";
 import {
-  ChartLine,
-  Cog,
-  UserRoundCog,
-  Bolt,
+  LayoutDashboard,
+  ShoppingCart,
+  Package,
   Users,
-  Download,
-  FileChartLine,
-  SquareActivity,
-  Newspaper,
-  Briefcase,
-  Megaphone,
-  Palette,
   BarChart2,
-  Handshake,
-  ClipboardList,
-  Grid,
-  Calendar
+  Store,
+  Settings,
+  Bell,
+  Headphones,
+  FileText,
+  Tag,
+  Truck,
 } from "lucide-react";
 
 export const MENU_SIDEBAR_MAIN: MenuConfig = [
   {
     children: [
       {
-        title: 'Home',
-        path: '#',
-        icon: Bolt
+        title: 'Dashboard',
+        path: '/dashboard',
+        icon: LayoutDashboard,
       },
       {
-        title: 'Updates',
-        path: '/layout-14',
-        icon: Users
+        title: 'Orders',
+        path: '#',
+        icon: ShoppingCart,
       },
       {
-        title: 'Inbox',
+        title: 'Products',
         path: '#',
-        icon: UserRoundCog
+        icon: Package,
       },
       {
-        title: 'Clients',
+        title: 'Customers',
         path: '#',
-        icon: Cog,
-        badge: 'Beta'
+        icon: Users,
       },
       {
-        title: 'My Tasks',
+        title: 'Analytics',
         path: '#',
-        icon: ChartLine
+        icon: BarChart2,
       },
     ],
   }
@@ -57,35 +51,14 @@ export const MENU_SIDEBAR_RESOURCES: MenuConfig = [
     title: 'Resources',
     children: [
       {
-        title: 'About Metronic',
+        title: 'Help Center',
         path: '#',
-        icon: Download
+        icon: Headphones,
       },
       {
-        title: 'Advertise',
+        title: 'Documentation',
         path: '#',
-        icon: FileChartLine,
-        badge: 'Pro'
-      },
-      {
-        title: 'Help',
-        path: '#',
-        icon: SquareActivity
-      },
-      {
-        title: 'Blog',
-        path: '#',
-        icon: Newspaper
-      },
-      {
-        title: 'Careers',
-        path: '#',
-        icon: Briefcase
-      },
-      {
-        title: 'Press',
-        path: '#',
-        icon: Megaphone
+        icon: FileText,
       },
     ],
   }
@@ -93,28 +66,32 @@ export const MENU_SIDEBAR_RESOURCES: MenuConfig = [
 
 export const MENU_SIDEBAR_WORKSPACES: MenuConfig = [
   {
-    title: 'Workspaces',
+    title: 'Store',
     children: [
       {
-        title: 'Business Concepts',
+        title: 'My Store',
         path: '#',
-        icon: Briefcase
+        icon: Store,
       },
       {
-        title: 'KeenThemes Studio',
+        title: 'Promotions',
         path: '#',
-        icon: Palette
+        icon: Tag,
       },
       {
-        title: 'Teams',
+        title: 'Shipping',
         path: '#',
-        icon: Handshake,
-        badge: 'Pro'
+        icon: Truck,
       },
       {
-        title: 'Reports',
+        title: 'Notifications',
         path: '#',
-        icon: BarChart2
+        icon: Bell,
+      },
+      {
+        title: 'Settings',
+        path: '#',
+        icon: Settings,
       },
     ],
   }
@@ -122,23 +99,8 @@ export const MENU_SIDEBAR_WORKSPACES: MenuConfig = [
 
 export const MENU_TOOLBAR: MenuConfig = [
   {
-    title: 'List',
-    path: '/layout-14',
-    icon: ClipboardList
-  },
-  {
-    title: 'Kanban',
-    path: '#',
-    icon: Grid
-  },
-  {
-    title: 'Calendar',
-    path: '#',
-    icon: Calendar
-  },
-  {
-    title: 'Dashboard',
-    path: '#',
-    icon: Bolt
+    title: 'Overview',
+    path: '/dashboard',
+    icon: LayoutDashboard,
   },
 ];

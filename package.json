@@ -1,6 +1,6 @@
 {
-  "name": "metronic-react-starter-kit",
-  "version": "9.4.7",
+  "name": "ordrat-dashboard",
+  "version": "0.0.1",
   "private": true,
   "scripts": {
     "dev": "next dev",

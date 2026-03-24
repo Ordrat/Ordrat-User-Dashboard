@@ -68,7 +68,7 @@ config/
 └── types.ts                      # MenuConfig type
 
 components/
-├── layouts/layout-14/            # Only layout in use
+├── layout/                       # Only layout in use — all components directly in this dir
 ├── providers/session-provider.tsx
 └── ui/                           # ~79 shared UI components
 ```
@@ -132,7 +132,7 @@ npx tsc --noEmit   # TypeScript type check only
 - **Token refresh** uses the `refreshToken` as an HTTP **header** (not body) on `POST /api/Auth/RefreshAccessToken`.
 - **Roles** are filtered against `KNOWN_ROLES` before storage. Unknown role strings from the backend are silently discarded.
 - **Incomplete seller setup**: if `shopId` is empty after login, redirect to `https://ordrat.com/seller-setup?sellerId=<id>`.
-- **Layout-14 only** — all other Metronic layout examples removed. Only `components/layouts/layout-14/` and `config/layout-14.config.tsx` remain.
+- **Layout-14 only** — all other Metronic layout examples removed. Components live in `components/layout/` (not a subdirectory); config at `config/layout-14.config.tsx`.
 
 ---
 
@@ -215,4 +215,17 @@ git branch -d 001-feature-name
 ```
 
 <!-- MANUAL ADDITIONS START -->
+## Logo Files (`public/media/app/`)
+
+Available: `logo.svg` (light), `logo-dark.png` (dark), `default-logo.svg` (light, full-width), `default-logo-dark.svg` (dark, full-width), `logo-transparent.svg`
+**Do not reference:** `mini-logo.svg`, `mini-logo-gray.svg`, `mini-logo-gray-dark.svg` — these do not exist.
+
+Usage convention:
+- **Header sidebar brand**: `default-logo.svg` / `default-logo-dark.svg` (full-width wordmark)
+- **Screen loader + auth panel**: `logo.svg` / `logo-dark.png`
+- Light/dark pattern: `<img src="logo.svg" className="dark:hidden" />` + `<img src="logo-dark.png" className="hidden dark:block" />`
+
+## UI Gotchas
+
+- **`SheetContent` accessibility** — Radix Dialog requires a `DialogTitle`. Always include `<SheetTitle className="sr-only">…</SheetTitle>` inside `SheetHeader` for navigation drawers that have no visible title.
 <!-- MANUAL ADDITIONS END -->

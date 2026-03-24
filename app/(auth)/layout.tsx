@@ -27,8 +27,13 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           <div className="flex flex-col p-8 lg:p-16 gap-4">
             <Link href="/">
               <img
-                src={toAbsoluteUrl('/media/app/mini-logo.svg')}
-                className="h-[28px] max-w-none"
+                src={toAbsoluteUrl('/media/app/logo.svg')}
+                className="dark:hidden h-[28px] max-w-none"
+                alt="Ordrat"
+              />
+              <img
+                src={toAbsoluteUrl('/media/app/logo-dark.png')}
+                className="hidden dark:block h-[28px] max-w-none"
                 alt="Ordrat"
               />
             </Link>

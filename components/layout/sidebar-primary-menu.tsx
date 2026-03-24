@@ -16,7 +16,7 @@ export function SidebarPrimaryMenu() {
   // Memoize matchPath to prevent unnecessary re-renders
   const matchPath = useCallback(
     (path: string): boolean =>
-      path === pathname || (path.length > 1 && pathname.startsWith(path) && path !== '/layout-14'),
+      path === pathname || (path.length > 1 && pathname.startsWith(path) && path !== '/dashboard'),
     [pathname],
   );
 
