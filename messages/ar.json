@@ -244,5 +244,15 @@
     "filter": "تصفية",
     "search": "بحث",
     "pageMenu": "قائمة الصفحة"
+  },
+  "pwa": {
+    "offline_banner": "أنت غير متصل بالإنترنت حالياً. يتم عرض البيانات المخزنة مؤقتاً.",
+    "offline_fallback_title": "أنت غير متصل",
+    "offline_fallback_description": "لم يتم تخزين هذه الصفحة بعد. يرجى الاتصال بالإنترنت لعرضها.",
+    "offline_fallback_retry": "حاول مرة أخرى",
+    "session_expired_warning": "قد تكون الجلسة منتهية — أعد الاتصال لمتابعة التعديل",
+    "update_available": "يتوفر إصدار جديد",
+    "update_reload": "إعادة تحميل",
+    "write_offline_error": "يتطلب هذا الإجراء اتصالاً بالإنترنت. يرجى المحاولة مرة أخرى عند الاتصال."
   }
 }

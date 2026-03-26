@@ -10,7 +10,10 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
         defaultOptions: {
           queries: {
             staleTime: 60 * 1000,
+            gcTime: 24 * 60 * 60 * 1000, // 24 h — aligns with SW API cache TTL
             retry: 1,
+            refetchOnReconnect: true,
+            networkMode: 'offlineFirst', // serve SW-cached responses even while offline
           },
         },
       }),
