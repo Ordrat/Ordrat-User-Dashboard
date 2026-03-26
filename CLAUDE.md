@@ -74,6 +74,8 @@ Next.js can emit hydration mismatch warnings when server-rendered HTML differs f
 ## Active Technologies
 - TypeScript 5.x / Next.js 16.x (App Router) + React 19, TanStack Query 5.x, React Hook Form 7.x, Zod 4.x, react-i18next, i18next, ReUI/Metronic 9 component system (002-shop-branch-management)
 - N/A (frontend-only; all data via .NET API) (002-shop-branch-management)
+- TypeScript 5.x + Next.js 16.x, React 19, `serwist` + `@serwist/next` (new), TanStack Query 5.x, react-i18next, sonner (003-pwa-offline-caching)
+- Browser Cache Storage (managed by Serwist service worker) (003-pwa-offline-caching)
 
 - **Framework**: Next.js 16.x (App Router)
 - **UI**: React 19, Tailwind CSS 4, ReUI + Metronic 9 component system
@@ -216,11 +218,36 @@ Use raw `fetch` with `process.env.BACKEND_API_URL` for server-side calls (in Nex
 ## Commands
 
 ```bash
-npm run dev        # start dev server
-npm run build      # production build (also runs TS type check)
+npm run dev        # start dev server (webpack mode — Serwist/SW disabled)
+npm run build      # production build — compiles SW, runs TS type check
+npm run start      # start production server (after build)
 npm run lint       # ESLint
 npx tsc --noEmit   # TypeScript type check only
 ```
+
+## Dev vs Build — When to Use Each
+
+| Goal | Command |
+|------|---------|
+| Normal daily development | `npm run dev` |
+| Testing PWA / offline / SW caching | `npm run build && npm run start` |
+| Deploying to Vercel | Just push — Vercel runs `build` automatically |
+
+**Why Serwist is disabled in dev:** SW caching conflicts with hot reload — code changes wouldn't appear, served from cache instead. Industry standard for all PWA frameworks.
+
+**Vercel — nothing extra needed:** Vercel runs `npm run build` automatically on every push. `public/sw.js` is generated during build and deployed as a static file. PWA works in production with zero extra config.
+
+**What works in each mode:**
+
+| Feature | `npm run dev` | `npm run build && start` |
+|---------|:---:|:---:|
+| Offline banner | ✅ | ✅ |
+| Session warning | ✅ | ✅ |
+| SW update toast | ✅ | ✅ |
+| API response caching | ❌ | ✅ |
+| Offline fallback page | ❌ | ✅ |
+| Install prompt | ❌ | ✅ |
+| Cache clear on sign-out | ❌ | ✅ |
 
 ## Architecture Notes
 
@@ -326,7 +353,41 @@ Usage convention:
 ## UI Gotchas
 
 - **`SheetContent` accessibility** — Radix Dialog requires a `DialogTitle`. Always include `<SheetTitle className="sr-only">…</SheetTitle>` inside `SheetHeader` for navigation drawers that have no visible title.
+
+## PWA — Progressive Web App (Always On)
+
+**This project is PWA-first.** Every new feature, page, and API integration must maintain PWA compatibility. The service worker, offline caching, and installability must never be broken.
+
+### PWA Stack
+- **Serwist** (`serwist` + `@serwist/next`) — official Next.js App Router PWA library (Workbox-based)
+- **`app/manifest.ts`** — web app manifest (Next.js built-in convention)
+- **`public/sw.js`** — generated service worker (output of Serwist build plugin)
+- **`next.config.js`** — includes Serwist webpack plugin; never remove or bypass it
+
+### Caching Strategies
+| Request type | Strategy | TTL |
+|---|---|---|
+| Static assets (JS, CSS, fonts, icons in `public/`) | Cache-first (precache) | Indefinite (versioned) |
+| GET `api.ordrat.com/*` | Stale-while-revalidate | 24 hours max |
+| POST / PATCH / PUT / DELETE | **Never cached** — fail gracefully offline | — |
+
+### PWA Rules for Every Feature
+- **New pages**: Must have an offline fallback. If a page uses dynamic data, the service worker caches GET API responses so the page renders offline.
+- **New static assets** added to `public/`: Automatically included in precache by the Serwist build plugin.
+- **New API endpoints**: GET endpoints auto-cached by SW runtime rule for `api.ordrat.com`. POST/PATCH/PUT/DELETE must show a user-facing error when called offline — no silent failure.
+- **Auth pages** (`/signin`, `/forgot-password`, `/verify-otp`, `/change-password`): Excluded from SW caching — auth flows always require network.
+- **TanStack Query**: `staleTime` and `gcTime` must align with SW cache TTL. Do not set `staleTime: Infinity` on authenticated data.
+- **SSG**: Use static site generation for non-user-specific shells and layout pages — pre-rendered HTML is the best offline fallback.
+- **Cache key scoping**: Authenticated API responses must be user-scoped to prevent cross-user data leakage.
+
+### Pre-Merge PWA Checklist (Every Feature)
+1. Does the new page have an offline fallback (cached API data or SSG)?
+2. Do new POST/PATCH/PUT/DELETE API calls show an error when offline?
+3. Does `npm run build` produce a valid `public/sw.js`?
+4. Does Lighthouse PWA score remain 100?
 <!-- MANUAL ADDITIONS END -->
 
 ## Recent Changes
+- 003-pwa-offline-caching: Added TypeScript 5.x + Next.js 16.x, React 19, `serwist` + `@serwist/next` (new), TanStack Query 5.x, react-i18next, sonner
 - 002-shop-branch-management: Added TypeScript 5.x / Next.js 16.x (App Router) + React 19, TanStack Query 5.x, React Hook Form 7.x, Zod 4.x, react-i18next, i18next, ReUI/Metronic 9 component system
+- 003-pwa-offline-caching: PWA-first requirement added — all features must maintain service worker, offline caching, and Serwist/Next.js manifest compatibility

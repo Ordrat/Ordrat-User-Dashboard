@@ -245,5 +245,15 @@
     "filter": "Filter",
     "search": "Search",
     "pageMenu": "Page Menu"
+  },
+  "pwa": {
+    "offline_banner": "You're currently offline. Showing cached data.",
+    "offline_fallback_title": "You're offline",
+    "offline_fallback_description": "This page hasn't been cached yet. Please reconnect to the internet to view it.",
+    "offline_fallback_retry": "Try again",
+    "session_expired_warning": "Session may be expired — reconnect to continue editing",
+    "update_available": "A new version is available",
+    "update_reload": "Reload",
+    "write_offline_error": "This action requires an internet connection. Please try again when you're back online."
   }
 }

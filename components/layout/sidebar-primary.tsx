@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
+import { clearSwApiCache } from '@/hooks/use-sw-cache-clear';
 import { cn } from '@/lib/utils';
 import {
   BarChart3,
@@ -270,7 +271,7 @@ export function SidebarPrimary() {
             <DropdownMenuSeparator />
 
             {/* Action Items */}
-            <DropdownMenuItem onClick={() => signOut({ callbackUrl: `/${locale}/signin` })}>
+            <DropdownMenuItem onClick={() => { clearSwApiCache(); signOut({ callbackUrl: `/${locale}/signin` }); }}>
               <LogOut/>
               <span>{t('nav.signOut')}</span>
             </DropdownMenuItem>

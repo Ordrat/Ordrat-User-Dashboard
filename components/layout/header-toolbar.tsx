@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useTheme } from "next-themes";
 import { useSession, signOut } from "next-auth/react";
+import { clearSwApiCache } from '@/hooks/use-sw-cache-clear';
 import { useParams } from "next/navigation";
 import { LanguageSwitcher } from "./language-switcher";
 import { useTranslation } from "react-i18next";
@@ -105,7 +106,7 @@ export function HeaderToolbar() {
 
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem onClick={() => signOut({ callbackUrl: `/${locale}/signin` })}>
+          <DropdownMenuItem onClick={() => { clearSwApiCache(); signOut({ callbackUrl: `/${locale}/signin` }); }}>
             <LogOut/>
             <span>{t('header.signOut')}</span>
           </DropdownMenuItem>
