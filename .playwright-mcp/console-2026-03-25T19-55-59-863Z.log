@@ -1,0 +1,259 @@
+[   15064ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/auth/callback/credentials:0
+[   17908ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/auth/callback/credentials:0
+[   23907ms] [WARNING] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior @ http://localhost:3000/_next/static/chunks/979b6_next_dist_2a67324b._.js:2297
+[  235240ms] [ERROR] ./app/[locale]/(dashboard)/shop/page.tsx:33:1
+Export useUploadCover doesn't exist in target module
+  31 | } from '@/components/ui/select';
+  32 |
+> 33 | import {
+     | ^^^^^^^^
+> 34 |   useShopProfile,
+     | ^^^^^^^^^^^^^^^^^
+> 35 |   useUpdateShop,
+     | ^^^^^^^^^^^^^^^^^
+> 36 |   useUploadLogo,
+     | ^^^^^^^^^^^^^^^^^
+> 37 |   useUploadCover,
+     | ^^^^^^^^^^^^^^^^^
+> 38 | } from '@/lib/ordrat-api/shop';
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  39 | import { ShopLanguage } from '@/lib/ordrat-api/schemas';
+  40 |
+  41 | // Only fields accepted by PUT /api/Shop/Update
+
+The export useUploadCover was not found in module [project]/lib/ordrat-api/shop.ts [app-client] (ecmascript).
+Did you mean to import useUpdateShop?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/[locale]/(dashboard)/shop/page.tsx [Client Component Browser]
+    ./app/[locale]/(dashboard)/shop/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/[locale]/(dashboard)/shop/page.tsx [Client Component SSR]
+    ./app/[locale]/(dashboard)/shop/page.tsx [Server Component] @ http://localhost:3000/_next/static/chunks/979b6_next_dist_2a67324b._.js:3127
+[  235241ms] [ERROR] ./app/[locale]/(dashboard)/shop/page.tsx:33:1
+Export useUploadCover doesn't exist in target module
+  31 | } from '@/components/ui/select';
+  32 |
+> 33 | import {
+     | ^^^^^^^^
+> 34 |   useShopProfile,
+     | ^^^^^^^^^^^^^^^^^
+> 35 |   useUpdateShop,
+     | ^^^^^^^^^^^^^^^^^
+> 36 |   useUploadLogo,
+     | ^^^^^^^^^^^^^^^^^
+> 37 |   useUploadCover,
+     | ^^^^^^^^^^^^^^^^^
+> 38 | } from '@/lib/ordrat-api/shop';
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  39 | import { ShopLanguage } from '@/lib/ordrat-api/schemas';
+  40 |
+  41 | // Only fields accepted by PUT /api/Shop/Update
+
+The export useUploadCover was not found in module [project]/lib/ordrat-api/shop.ts [app-ssr] (ecmascript).
+Did you mean to import useUpdateShop?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/[locale]/(dashboard)/shop/page.tsx [Client Component Browser]
+    ./app/[locale]/(dashboard)/shop/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/[locale]/(dashboard)/shop/page.tsx [Client Component SSR]
+    ./app/[locale]/(dashboard)/shop/page.tsx [Server Component] @ http://localhost:3000/_next/static/chunks/979b6_next_dist_2a67324b._.js:3127
+[  235241ms] [ERROR] ./app/[locale]/(dashboard)/shop/page.tsx:33:1
+Export useUploadLogo doesn't exist in target module
+  31 | } from '@/components/ui/select';
+  32 |
+> 33 | import {
+     | ^^^^^^^^
+> 34 |   useShopProfile,
+     | ^^^^^^^^^^^^^^^^^
+> 35 |   useUpdateShop,
+     | ^^^^^^^^^^^^^^^^^
+> 36 |   useUploadLogo,
+     | ^^^^^^^^^^^^^^^^^
+> 37 |   useUploadCover,
+     | ^^^^^^^^^^^^^^^^^
+> 38 | } from '@/lib/ordrat-api/shop';
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  39 | import { ShopLanguage } from '@/lib/ordrat-api/schemas';
+  40 |
+  41 | // Only fields accepted by PUT /api/Shop/Update
+
+The export useUploadLogo was not found in module [project]/lib/ordrat-api/shop.ts [app-client] (ecmascript).
+Did you mean to import useUpdateShop?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/[locale]/(dashboard)/shop/page.tsx [Client Component Browser]
+    ./app/[locale]/(dashboard)/shop/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/[locale]/(dashboard)/shop/page.tsx [Client Component SSR]
+    ./app/[locale]/(dashboard)/shop/page.tsx [Server Component] @ http://localhost:3000/_next/static/chunks/979b6_next_dist_2a67324b._.js:3127
+[  235241ms] [ERROR] ./app/[locale]/(dashboard)/shop/page.tsx:33:1
+Export useUploadLogo doesn't exist in target module
+  31 | } from '@/components/ui/select';
+  32 |
+> 33 | import {
+     | ^^^^^^^^
+> 34 |   useShopProfile,
+     | ^^^^^^^^^^^^^^^^^
+> 35 |   useUpdateShop,
+     | ^^^^^^^^^^^^^^^^^
+> 36 |   useUploadLogo,
+     | ^^^^^^^^^^^^^^^^^
+> 37 |   useUploadCover,
+     | ^^^^^^^^^^^^^^^^^
+> 38 | } from '@/lib/ordrat-api/shop';
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  39 | import { ShopLanguage } from '@/lib/ordrat-api/schemas';
+  40 |
+  41 | // Only fields accepted by PUT /api/Shop/Update
+
+The export useUploadLogo was not found in module [project]/lib/ordrat-api/shop.ts [app-ssr] (ecmascript).
+Did you mean to import useUpdateShop?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/[locale]/(dashboard)/shop/page.tsx [Client Component Browser]
+    ./app/[locale]/(dashboard)/shop/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/[locale]/(dashboard)/shop/page.tsx [Client Component SSR]
+    ./app/[locale]/(dashboard)/shop/page.tsx [Server Component] @ http://localhost:3000/_next/static/chunks/979b6_next_dist_2a67324b._.js:3127
+[  247966ms] [ERROR] ./app/[locale]/(dashboard)/shop/page.tsx:33:1
+Export useUploadCover doesn't exist in target module
+  31 | } from '@/components/ui/select';
+  32 |
+> 33 | import {
+     | ^^^^^^^^
+> 34 |   useShopProfile,
+     | ^^^^^^^^^^^^^^^^^
+> 35 |   useUpdateShop,
+     | ^^^^^^^^^^^^^^^^^
+> 36 |   useUploadLogo,
+     | ^^^^^^^^^^^^^^^^^
+> 37 |   useUploadCover,
+     | ^^^^^^^^^^^^^^^^^
+> 38 | } from '@/lib/ordrat-api/shop';
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  39 | import { ShopLanguage } from '@/lib/ordrat-api/schemas';
+  40 |
+  41 | // Only fields accepted by PUT /api/Shop/Update
+
+The export useUploadCover was not found in module [project]/lib/ordrat-api/shop.ts [app-client] (ecmascript).
+Did you mean to import useUpdateShop?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/[locale]/(dashboard)/shop/page.tsx [Client Component Browser]
+    ./app/[locale]/(dashboard)/shop/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/[locale]/(dashboard)/shop/page.tsx [Client Component SSR]
+    ./app/[locale]/(dashboard)/shop/page.tsx [Server Component] @ http://localhost:3000/_next/static/chunks/979b6_next_dist_2a67324b._.js:3127
+[  247967ms] [ERROR] ./app/[locale]/(dashboard)/shop/page.tsx:33:1
+Export useUploadCover doesn't exist in target module
+  31 | } from '@/components/ui/select';
+  32 |
+> 33 | import {
+     | ^^^^^^^^
+> 34 |   useShopProfile,
+     | ^^^^^^^^^^^^^^^^^
+> 35 |   useUpdateShop,
+     | ^^^^^^^^^^^^^^^^^
+> 36 |   useUploadLogo,
+     | ^^^^^^^^^^^^^^^^^
+> 37 |   useUploadCover,
+     | ^^^^^^^^^^^^^^^^^
+> 38 | } from '@/lib/ordrat-api/shop';
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  39 | import { ShopLanguage } from '@/lib/ordrat-api/schemas';
+  40 |
+  41 | // Only fields accepted by PUT /api/Shop/Update
+
+The export useUploadCover was not found in module [project]/lib/ordrat-api/shop.ts [app-ssr] (ecmascript).
+Did you mean to import useUpdateShop?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/[locale]/(dashboard)/shop/page.tsx [Client Component Browser]
+    ./app/[locale]/(dashboard)/shop/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/[locale]/(dashboard)/shop/page.tsx [Client Component SSR]
+    ./app/[locale]/(dashboard)/shop/page.tsx [Server Component] @ http://localhost:3000/_next/static/chunks/979b6_next_dist_2a67324b._.js:3127
+[  247967ms] [ERROR] ./app/[locale]/(dashboard)/shop/page.tsx:33:1
+Export useUploadLogo doesn't exist in target module
+  31 | } from '@/components/ui/select';
+  32 |
+> 33 | import {
+     | ^^^^^^^^
+> 34 |   useShopProfile,
+     | ^^^^^^^^^^^^^^^^^
+> 35 |   useUpdateShop,
+     | ^^^^^^^^^^^^^^^^^
+> 36 |   useUploadLogo,
+     | ^^^^^^^^^^^^^^^^^
+> 37 |   useUploadCover,
+     | ^^^^^^^^^^^^^^^^^
+> 38 | } from '@/lib/ordrat-api/shop';
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  39 | import { ShopLanguage } from '@/lib/ordrat-api/schemas';
+  40 |
+  41 | // Only fields accepted by PUT /api/Shop/Update
+
+The export useUploadLogo was not found in module [project]/lib/ordrat-api/shop.ts [app-client] (ecmascript).
+Did you mean to import useUpdateShop?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/[locale]/(dashboard)/shop/page.tsx [Client Component Browser]
+    ./app/[locale]/(dashboard)/shop/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/[locale]/(dashboard)/shop/page.tsx [Client Component SSR]
+    ./app/[locale]/(dashboard)/shop/page.tsx [Server Component] @ http://localhost:3000/_next/static/chunks/979b6_next_dist_2a67324b._.js:3127
+[  247967ms] [ERROR] ./app/[locale]/(dashboard)/shop/page.tsx:33:1
+Export useUploadLogo doesn't exist in target module
+  31 | } from '@/components/ui/select';
+  32 |
+> 33 | import {
+     | ^^^^^^^^
+> 34 |   useShopProfile,
+     | ^^^^^^^^^^^^^^^^^
+> 35 |   useUpdateShop,
+     | ^^^^^^^^^^^^^^^^^
+> 36 |   useUploadLogo,
+     | ^^^^^^^^^^^^^^^^^
+> 37 |   useUploadCover,
+     | ^^^^^^^^^^^^^^^^^
+> 38 | } from '@/lib/ordrat-api/shop';
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  39 | import { ShopLanguage } from '@/lib/ordrat-api/schemas';
+  40 |
+  41 | // Only fields accepted by PUT /api/Shop/Update
+
+The export useUploadLogo was not found in module [project]/lib/ordrat-api/shop.ts [app-ssr] (ecmascript).
+Did you mean to import useUpdateShop?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/[locale]/(dashboard)/shop/page.tsx [Client Component Browser]
+    ./app/[locale]/(dashboard)/shop/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/[locale]/(dashboard)/shop/page.tsx [Client Component SSR]
+    ./app/[locale]/(dashboard)/shop/page.tsx [Server Component] @ http://localhost:3000/_next/static/chunks/979b6_next_dist_2a67324b._.js:3127

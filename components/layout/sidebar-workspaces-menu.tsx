@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { MENU_SIDEBAR_WORKSPACES } from "@/config/layout-14.config";
+import { MENU_SIDEBAR_WORKSPACES } from "@/config/layout.config";
 import {
   AccordionMenu,
   AccordionMenuIndicator,
@@ -10,16 +10,22 @@ import {
 } from '@/components/ui/accordion-menu';
 import { Badge } from '@/components/ui/badge';
 import { Minus, Plus } from "lucide-react";
-import { usePathname } from 'next/navigation';
+import { usePathname, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 
 export function SidebarWorkspacesMenu() {
   const pathname = usePathname();
+  const params = useParams();
+  const locale = (params?.locale as string) ?? 'en';
+  const { t } = useTranslation('common');
 
   // Memoize matchPath to prevent unnecessary re-renders
   const matchPath = useCallback(
-    (path: string): boolean =>
-      path === pathname || (path.length > 1 && pathname.startsWith(path) && path !== '/dashboard'),
+    (path: string): boolean => {
+      // path already has locale prefix when rendered
+      return path === pathname || (path.length > 1 && pathname.startsWith(path) && !path.endsWith('/dashboard'));
+    },
     [pathname],
   );
 
@@ -41,7 +47,7 @@ export function SidebarWorkspacesMenu() {
       {MENU_SIDEBAR_WORKSPACES.map((item, index) => (
         <AccordionMenuSub key={index} value="workspaces">
           <AccordionMenuSubTrigger value="workspace-trigger">
-            <span>{item.title}</span>
+            <span>{item.title ? t(item.title) : null}</span>
             <AccordionMenuIndicator>
               <Plus className="size-3.5 shrink-0 transition-transform duration-200 hidden group-data-[state=open]:block" />
               <Minus className="size-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]:hidden" />
@@ -49,15 +55,20 @@ export function SidebarWorkspacesMenu() {
           </AccordionMenuSubTrigger>
 
           <AccordionMenuSubContent type="single" collapsible parentValue="workspace-trigger">
-            {item.children?.map((child, index) => (
-              <AccordionMenuItem key={index} value={child.path || '#'}>
-                <Link href={child.path || '#'}>
-                  {child.icon && <child.icon />}
-                  <span>{child.title}</span>
-                  {child.badge == 'Pro' && <Badge size="sm" variant="success" appearance="light">{child.badge}</Badge>}
-                </Link>
-              </AccordionMenuItem>
-            ))}
+            {item.children?.map((child, childIndex) => {
+              const href = child.path && child.path !== '#'
+                ? `/${locale}${child.path}`
+                : '#';
+              return (
+                <AccordionMenuItem key={childIndex} value={href}>
+                  <Link href={href}>
+                    {child.icon && <child.icon />}
+                    <span>{t(child.title ?? '')}</span>
+                    {child.badge == 'Pro' && <Badge size="sm" variant="success" appearance="light">{child.badge}</Badge>}
+                  </Link>
+                </AccordionMenuItem>
+              );
+            })}
           </AccordionMenuSubContent>
         </AccordionMenuSub>
       ))}

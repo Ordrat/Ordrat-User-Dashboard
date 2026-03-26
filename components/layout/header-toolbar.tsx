@@ -1,15 +1,11 @@
 import {
   Search,
-  Coffee,
-  MessageSquareCode,
-  Pin,
-  ClipboardList,
   User,
   Settings,
   LogOut,
   Sun,
   Moon,
-  Plus,
+  Bell,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input, InputWrapper } from "@/components/ui/input";
@@ -29,11 +25,17 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useTheme } from "next-themes";
 import { useSession, signOut } from "next-auth/react";
+import { useParams } from "next/navigation";
+import { LanguageSwitcher } from "./language-switcher";
+import { useTranslation } from "react-i18next";
 
 export function HeaderToolbar() {
   const { isMobile } = useLayout();
   const { theme, setTheme } = useTheme();
   const { data: session } = useSession();
+  const params = useParams();
+  const locale = (params?.locale as string) ?? 'en';
+  const { t } = useTranslation('common');
 
   const userName = session?.user?.name ?? 'User';
   const userEmail = session?.user?.email ?? '';
@@ -47,29 +49,23 @@ export function HeaderToolbar() {
 
   return (
     <nav className="flex items-center gap-2.5">
-      <Button mode="icon" variant="outline"><Coffee /></Button>
-      <Button mode="icon" variant="outline"><MessageSquareCode /></Button>
-      <Button mode="icon" variant="outline"><Pin /></Button>
 
+      <Button mode="icon" variant="outline">
+        <Bell />
+      </Button>
+
+
+      <LanguageSwitcher />
+
+      <Button mode="icon" variant="outline" onClick={toggleTheme}>
+        {theme === 'light' ? <Moon /> : <Sun />}
+      </Button>
       {!isMobile && (
         <InputWrapper className="w-full lg:w-40">
           <Search />
-          <Input type="search" placeholder="Search" onChange={handleInputChange} />
+          <Input type="search" placeholder={t('header.search')} onChange={handleInputChange} />
         </InputWrapper>
       )}
-
-      {isMobile ? (
-        <>
-          <Button variant="outline" mode="icon"><ClipboardList /></Button>
-          <Button variant="mono" mode="icon"><Plus /></Button>
-        </>
-      ) : (
-        <>
-          <Button variant="outline"><ClipboardList /> Reports</Button>
-          <Button variant="mono"><Plus /> Add</Button>
-        </>
-      )}
-
       {/* User Dropdown Menu */}
       <DropdownMenu>
         <DropdownMenuTrigger className="cursor-pointer">
@@ -99,26 +95,19 @@ export function HeaderToolbar() {
 
           <DropdownMenuItem>
             <User/>
-            <span>Profile</span>
+            <span>{t('header.profile')}</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem>
             <Settings/>
-            <span>Settings</span>
+            <span>{t('header.settings')}</span>
           </DropdownMenuItem>
 
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem onClick={toggleTheme}>
-            {theme === "light" ? <Moon className="size-4" /> : <Sun className="size-4" />}
-            <span>{theme === "light" ? "Dark mode" : "Light mode"}</span>
-          </DropdownMenuItem>
-
-          <DropdownMenuSeparator />
-
-          <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/signin' })}>
+          <DropdownMenuItem onClick={() => signOut({ callbackUrl: `/${locale}/signin` })}>
             <LogOut/>
-            <span>Sign out</span>
+            <span>{t('header.signOut')}</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

@@ -62,7 +62,7 @@ export const ROUTE_ROLES: Record<string, string[]> = {
   '/customers': ['sellerDashboard-customers'],
   '/reports': ['sellerDashboard-reports'],
   '/analytics': ['sellerDashboard-analytics'],
-  '/branches': ['sellerDashboard-branches', 'CreateBranch'],
+  // '/branches': ['sellerDashboard-branches', 'CreateBranch'], // relaxed — all authenticated sellers can manage branches
   '/drivers': ['sellerDashboard-drivers'],
   '/zones': ['sellerDashboard-zones'],
   '/coupons': ['sellerDashboard-coupons'],

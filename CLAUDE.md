@@ -4,8 +4,7 @@
 
 Next.js 16.x / React 19 / Tailwind CSS 4 seller dashboard. Backend is a **.NET API** (`https://api.ordrat.com`) — this is **frontend-only**. No full-stack, no Prisma for business logic.
 
-**Refactoring source**: `https://github.com/Galal-Elsayed/Ordrat-Old-Dashboard`
-When implementing any auth or existing feature, check the old repo first — it has the proven logic, endpoints, and flow. Copy and adapt to this project's stack (Zod instead of Yup, `fetch` instead of Axios, NextAuth session instead of raw cookies, no reCAPTCHA).
+**API source**: All endpoint contracts come from the Swagger docs at `https://api.ordrat.com/index.html`. This is the single source of truth for API shapes, request bodies, and response structures.
 
 ## Reusable UI Components
 
@@ -23,13 +22,62 @@ Key components:
 
 The `Toaster` is already mounted in `app/layout.tsx` — **do not add it again** in page or layout components.
 
+## Toolbar Page Title & Logo
+
+The layout toolbar (`components/layout/wrapper.tsx`) renders the page title and an optional logo dynamically. The data flows through `LayoutContext`:
+
+```
+usePageMeta(title, logo?)          ← called in any page component
+    ↓  setPageTitle / setPageLogo
+LayoutContext (context.tsx)        ← holds pageTitle / pageLogo state
+    ↓  consumed by
+Wrapper (wrapper.tsx)              ← renders icon + title in <Toolbar>
+```
+
+**Hook usage — every dashboard page that needs a custom title must call this:**
+
+```tsx
+import { usePageMeta } from '@/hooks/use-page-meta';
+
+usePageMeta(t('shop.profile'), logoPreview);  // title + reactive logo URL
+usePageMeta(t('nav.dashboard'));               // title only (no logo)
+usePageMeta(t('branches.title'), null);        // explicit null — no logo
+```
+
+**Fallback icon:** When `logo` is `null`/`undefined`, the wrapper automatically falls back to the current page's sidebar menu icon (resolved via `useMenu` + `layout.config.tsx`). No extra work needed.
+
+**Logo reactivity:** `logo` updates independently from `title` — pass `logoPreview` state directly and it will reflect immediately after an upload or API load without remounting.
+
+**Rules:**
+- `title` must always come from `useTranslation('common')` — never a hardcoded string
+- `logo` is optional; pass a URL string, `null`, or omit entirely
+- The hook cleans up `pageTitle` and `pageLogo` to `null` on page unmount automatically
+- All text keys live in `messages/en.json` and `messages/ar.json` — keep both in sync
+
+## Hydration Warning Suppression
+
+Next.js can emit hydration mismatch warnings when server-rendered HTML differs from the first client render. This project suppresses them in two places:
+
+| Element | File | Why |
+|---|---|---|
+| `<html>` | `app/layout.tsx` | `next-themes` injects `class` + the inline dir/lang script mutates attributes before React hydrates |
+| `<body>` | `app/layout.tsx` | `LayoutProvider` appends to `body.className` via `useEffect` |
+| Layout wrapper `<div>` | `components/layout/context.tsx` | `data-sidebar-open` is client-only state (boolean) — no server value |
+
+**Rules for future additions:**
+- Add `suppressHydrationWarning` only on elements whose attributes/classNames are intentionally mutated by `useEffect` or third-party scripts before React hydrates.
+- Do **not** add it to suppress bugs — fix the root cause instead (e.g. mismatched initial state between SSR and CSR).
+- `pageTitle` and `pageLogo` are set via `useEffect` inside `usePageMeta`, so they are always `null` on the first render on both server and client — **no suppression needed** for those.
+
 ---
 
 ## Active Technologies
+- TypeScript 5.x / Next.js 16.x (App Router) + React 19, TanStack Query 5.x, React Hook Form 7.x, Zod 4.x, react-i18next, i18next, ReUI/Metronic 9 component system (002-shop-branch-management)
+- N/A (frontend-only; all data via .NET API) (002-shop-branch-management)
 
 - **Framework**: Next.js 16.x (App Router)
 - **UI**: React 19, Tailwind CSS 4, ReUI + Metronic 9 component system
-- **Layout**: **layout-14 is the only dashboard layout** — all others removed
+- **Layout**: **layout is the only dashboard layout** — all others removed
 - **Auth**: NextAuth v4 (`next-auth`) — Credentials provider calling .NET backend
 - **Forms**: React Hook Form + Zod
 - **Data fetching**: TanStack Query
@@ -58,13 +106,16 @@ app/
 
 lib/
 ├── ordrat-api/                   # .NET backend API functions (grouped by domain)
+│   ├── endpoints.ts              # ⭐ ENDPOINT CATALOG — all API paths + accepted fields
 │   ├── auth.ts                   # loginWithCredentials(), refreshAccessToken()
+│   ├── shop.ts                   # useShopProfile(), useUpdateShop(), useUploadLogo/Cover()
+│   ├── branch.ts                 # useBranches(), useCreateBranch(), etc.
 │   └── schemas.ts                # Zod schemas for backend responses
 └── api-client.ts                 # ordratFetch() — fetch wrapper with Bearer token + 401 retry
 
 config/
 ├── roles.ts                      # KNOWN_ROLES, ROUTE_ROLES, helpers
-├── layout-14.config.tsx          # Sidebar menu config for layout-14
+├── layout.config.tsx          # Sidebar menu config for layout
 └── types.ts                      # MenuConfig type
 
 components/
@@ -89,16 +140,63 @@ components/
 2. `POST /api/Auth/VerifyForgetCode` → save `ResetToken` to localStorage → redirect `/change-password`
 3. `PATCH /api/Auth/ResetPassword` → clear localStorage → redirect `/signin`
 
+## API Endpoint Catalog
+
+**`lib/ordrat-api/endpoints.ts`** is the single source of truth for all API paths and their accepted fields. **Never hardcode an API path outside this file.**
+
+```ts
+import { ENDPOINTS } from '@/lib/ordrat-api/endpoints';
+
+// Path helpers
+ENDPOINTS.Shop.GetById(shopId)          // '/api/Shop/GetById/<id>'
+ENDPOINTS.Shop.Update.path              // '/api/Shop/Update'
+ENDPOINTS.Shop.Update.method            // 'PUT'
+ENDPOINTS.Branch.Create.path            // '/api/Branch/Create'
+```
+
+The file is organized by domain (`Auth`, `Shop`, `Branch`, `Category`) and each entry includes JSDoc comments listing every accepted field. When the Swagger spec changes, update `endpoints.ts` first, then fix consuming code.
+
+**Offline Swagger snapshot — `lib/ordrat-api/swagger.json`:**
+
+The full Swagger spec (589 endpoints, 102 controllers) is saved locally so it can be queried without a network request. Refresh it when the backend changes:
+
+```bash
+npm run swagger:sync
+```
+
+Query it with Python — examples:
+```bash
+# List all paths for a controller
+cat lib/ordrat-api/swagger.json | python3 -c "
+import json,sys; d=json.load(sys.stdin)
+print('\n'.join(k for k in d['paths'] if k.startswith('/api/Shop')))
+"
+
+# Show accepted fields for a specific endpoint
+cat lib/ordrat-api/swagger.json | python3 -c "
+import json,sys; d=json.load(sys.stdin)
+op = d['paths']['/api/Shop/Update']['put']
+rb = op['requestBody']['content']['multipart/form-data']['schema']
+print(list(rb['properties'].keys()))
+"
+
+# List all controllers
+cat lib/ordrat-api/swagger.json | python3 -c "
+import json,sys; d=json.load(sys.stdin)
+tags = sorted(set(t for p in d['paths'].values() for m in p.values() for t in m.get('tags',[])))
+print(tags)
+"
+```
+
+**Rules:**
+- Each endpoint entry in `endpoints.ts` documents which fields are accepted vs. read-only
+- When adding a new feature, query `swagger.json` first — don't guess field names
+
 ## Adding New API Domains
 
-Put all .NET API calls inside `lib/ordrat-api/` grouped by domain:
-```
-lib/ordrat-api/
-├── auth.ts        # Auth endpoints
-├── orders.ts      # Order endpoints (future)
-├── products.ts    # Product endpoints (future)
-└── schemas.ts     # All Zod schemas
-```
+1. Add endpoint constants to `lib/ordrat-api/endpoints.ts`
+2. Create `lib/ordrat-api/<domain>.ts` with TanStack Query hooks
+3. Add Zod response schemas to `lib/ordrat-api/schemas.ts`
 
 Use `ordratFetch()` from `lib/api-client.ts` for all client-side API calls (handles Bearer token + 401 retry).
 Use raw `fetch` with `process.env.BACKEND_API_URL` for server-side calls (in NextAuth, Server Actions).
@@ -132,7 +230,7 @@ npx tsc --noEmit   # TypeScript type check only
 - **Token refresh** uses the `refreshToken` as an HTTP **header** (not body) on `POST /api/Auth/RefreshAccessToken`.
 - **Roles** are filtered against `KNOWN_ROLES` before storage. Unknown role strings from the backend are silently discarded.
 - **Incomplete seller setup**: if `shopId` is empty after login, redirect to `https://ordrat.com/seller-setup?sellerId=<id>`.
-- **Layout-14 only** — all other Metronic layout examples removed. Components live in `components/layout/` (not a subdirectory); config at `config/layout-14.config.tsx`.
+- **layout only** — all other Metronic layout examples removed. Components live in `components/layout/` (not a subdirectory); config at `config/layout.config.tsx`.
 
 ---
 
@@ -229,3 +327,6 @@ Usage convention:
 
 - **`SheetContent` accessibility** — Radix Dialog requires a `DialogTitle`. Always include `<SheetTitle className="sr-only">…</SheetTitle>` inside `SheetHeader` for navigation drawers that have no visible title.
 <!-- MANUAL ADDITIONS END -->
+
+## Recent Changes
+- 002-shop-branch-management: Added TypeScript 5.x / Next.js 16.x (App Router) + React 19, TanStack Query 5.x, React Hook Form 7.x, Zod 4.x, react-i18next, i18next, ReUI/Metronic 9 component system

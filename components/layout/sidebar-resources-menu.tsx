@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { MENU_SIDEBAR_RESOURCES } from "@/config/layout-14.config";
+import { MENU_SIDEBAR_RESOURCES } from "@/config/layout.config";
 import {
   AccordionMenu,
   AccordionMenuIndicator,
@@ -9,16 +9,21 @@ import {
   AccordionMenuItem,
 } from '@/components/ui/accordion-menu';
 import { Badge } from '@/components/ui/badge';
-import { usePathname } from 'next/navigation';
+import { usePathname, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 
 export function SidebarResourcesMenu() {
   const pathname = usePathname();
+  const params = useParams();
+  const locale = (params?.locale as string) ?? 'en';
+  const { t } = useTranslation('common');
 
   // Memoize matchPath to prevent unnecessary re-renders
   const matchPath = useCallback(
-    (path: string): boolean =>
-      path === pathname || (path.length > 1 && pathname.startsWith(path) && path !== '/dashboard'),
+    (path: string): boolean => {
+      return path === pathname || (path.length > 1 && pathname.startsWith(path) && !path.endsWith('/dashboard'));
+    },
     [pathname],
   );
 
@@ -39,20 +44,25 @@ export function SidebarResourcesMenu() {
       {MENU_SIDEBAR_RESOURCES.map((item, index) => (
         <AccordionMenuSub key={index} value="resources">
           <AccordionMenuSubTrigger value="resource-trigger">
-            <span>{item.title}</span>
+            <span>{item.title ? t(item.title) : null}</span>
             <AccordionMenuIndicator />
           </AccordionMenuSubTrigger>
 
           <AccordionMenuSubContent type="single" collapsible parentValue="resource-trigger">
-            {item.children?.map((child, index) => (
-              <AccordionMenuItem key={index} value={child.path || '#'}>
-                <Link href={child.path || '#'}>
-                  {child.icon && <child.icon />}
-                  <span>{child.title}</span>
-                  {child.badge == 'Pro' && <Badge size="sm" variant="success" appearance="light">{child.badge}</Badge>}
-                </Link>
-              </AccordionMenuItem>
-            ))}
+            {item.children?.map((child, childIndex) => {
+              const href = child.path && child.path !== '#'
+                ? `/${locale}${child.path}`
+                : '#';
+              return (
+                <AccordionMenuItem key={childIndex} value={href}>
+                  <Link href={href}>
+                    {child.icon && <child.icon />}
+                    <span>{t(child.title ?? '')}</span>
+                    {child.badge == 'Pro' && <Badge size="sm" variant="success" appearance="light">{child.badge}</Badge>}
+                  </Link>
+                </AccordionMenuItem>
+              );
+            })}
           </AccordionMenuSubContent>
         </AccordionMenuSub>
       ))}

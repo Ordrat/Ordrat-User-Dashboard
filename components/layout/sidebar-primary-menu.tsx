@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { MENU_SIDEBAR_MAIN } from "@/config/layout-14.config";
+import { MENU_SIDEBAR_MAIN } from "@/config/layout.config";
 import {
   AccordionMenu,
   AccordionMenuGroup,
@@ -7,16 +7,22 @@ import {
   AccordionMenuLabel
 } from '@/components/ui/accordion-menu';
 import { Badge } from '@/components/ui/badge';
-import { usePathname } from 'next/navigation';
+import { usePathname, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 
 export function SidebarPrimaryMenu() {
   const pathname = usePathname();
+  const params = useParams();
+  const locale = (params?.locale as string) ?? 'en';
+  const { t } = useTranslation('common');
 
   // Memoize matchPath to prevent unnecessary re-renders
   const matchPath = useCallback(
-    (path: string): boolean =>
-      path === pathname || (path.length > 1 && pathname.startsWith(path) && path !== '/dashboard'),
+    (path: string): boolean => {
+      // path already has locale prefix when rendered
+      return path === pathname || (path.length > 1 && pathname.startsWith(path) && !path.endsWith('/dashboard'));
+    },
     [pathname],
   );
 
@@ -36,14 +42,17 @@ export function SidebarPrimaryMenu() {
         return (
           <AccordionMenuGroup key={index}>
             <AccordionMenuLabel>
-              {item.title}
+              {item.title ? t(item.title) : null}
             </AccordionMenuLabel>
-            {item.children?.map((child, index) => {
+            {item.children?.map((child, childIndex) => {
+              const href = child.path && child.path !== '#'
+                ? `/${locale}${child.path}`
+                : '#';
               return (
-                <AccordionMenuItem key={index} value={child.path || '#'}>
-                  <Link href={child.path || '#'}>
+                <AccordionMenuItem key={childIndex} value={href}>
+                  <Link href={href}>
                     {child.icon && <child.icon />}
-                    <span>{child.title}</span>
+                    <span>{t(child.title ?? '')}</span>
                     {child.badge == 'Beta' && <Badge size="sm" variant="destructive" appearance="light">{child.badge}</Badge>}
                   </Link>
                 </AccordionMenuItem>

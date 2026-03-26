@@ -1,5 +1,5 @@
 import { Fragment, ReactNode } from 'react';
-import { MENU_SIDEBAR_MAIN } from '@/config/layout-14.config';
+import { MENU_SIDEBAR_MAIN, MENU_SIDEBAR_WORKSPACES, MENU_SIDEBAR_RESOURCES } from '@/config/layout.config';
 import { useMenu } from '@/hooks/use-menu';
 import { MenuItem } from '@/config/types';
 import {
@@ -10,8 +10,19 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { usePathname } from 'next/navigation';
+import { usePathname, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
+
+const LOCALES = ['en', 'ar'];
+
+function stripLocale(pathname: string): string {
+  const segments = pathname.split('/');
+  if (segments.length > 1 && LOCALES.includes(segments[1])) {
+    return '/' + segments.slice(2).join('/') || '/';
+  }
+  return pathname;
+}
 
 export interface ToolbarHeadingProps {
   title?: string | ReactNode;
@@ -32,8 +43,13 @@ function ToolbarActions({ children }: { children?: ReactNode }) {
 
 function ToolbarBreadcrumbs() {
   const pathname = usePathname();
-  const { getBreadcrumb } = useMenu(pathname);
-  const items: MenuItem[] = getBreadcrumb(MENU_SIDEBAR_MAIN);
+  const params = useParams();
+  const locale = (params?.locale as string) ?? 'en';
+  const { t } = useTranslation('common');
+  const pathWithoutLocale = stripLocale(pathname);
+  const { getBreadcrumb } = useMenu(pathWithoutLocale);
+  const allMenus = [...MENU_SIDEBAR_MAIN, ...MENU_SIDEBAR_WORKSPACES, ...MENU_SIDEBAR_RESOURCES];
+  const items: MenuItem[] = getBreadcrumb(allMenus);
 
   if (items.length === 0) {
     return null;
@@ -44,24 +60,27 @@ function ToolbarBreadcrumbs() {
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
-            <Link href="#">Home</Link>
+            <Link href={`/${locale}/dashboard`}>{t('nav.home')}</Link>
           </BreadcrumbLink>
         </BreadcrumbItem>
         {items.map((item, index) => {
           const isLast = index === items.length - 1;
+          const href = item.path && item.path !== '#'
+            ? `/${locale}${item.path}`
+            : '#';
 
           return (
             <Fragment key={index}>
-              {index !== items.length - 1 && <BreadcrumbSeparator className="text-xs text-muted-foreground">/</BreadcrumbSeparator>}
+              <BreadcrumbSeparator className="text-xs text-muted-foreground">/</BreadcrumbSeparator>
               <BreadcrumbItem>
                 {!isLast ? (
                   <BreadcrumbLink asChild>
-                    <Link href={item.path || '#'}>{item.title}</Link>
+                    <Link href={href}>{t(item.title ?? '')}</Link>
                   </BreadcrumbLink>
                 ) : (
-                  <BreadcrumbPage>{item.title}</BreadcrumbPage>
+                  <BreadcrumbPage>{t(item.title ?? '')}</BreadcrumbPage>
                 )}
-              </BreadcrumbItem>              
+              </BreadcrumbItem>
             </Fragment>
           );
         })}
@@ -76,12 +95,15 @@ function ToolbarHeading ({ children }: { children: ReactNode }) {
 
 function ToolbarPageTitle ({ children }: { children?: string }) {
   const pathname = usePathname();
-  const { getCurrentItem } = useMenu(pathname);
-  const item = getCurrentItem(MENU_SIDEBAR_MAIN);
+  const { t } = useTranslation('common');
+  const pathWithoutLocale = stripLocale(pathname);
+  const { getCurrentItem } = useMenu(pathWithoutLocale);
+  const allMenus = [...MENU_SIDEBAR_MAIN, ...MENU_SIDEBAR_WORKSPACES, ...MENU_SIDEBAR_RESOURCES];
+  const item = getCurrentItem(allMenus);
 
   return (
     <h1 className="text-base font-medium leading-none text-foreground">
-      {children ? children : item?.title || 'Untitled'}
+      {children ? children : item?.title ? t(item.title) : ''}
     </h1>
   );
 };
@@ -94,11 +116,32 @@ function ToolbarDescription ({ children }: { children: ReactNode }) {
   );
 };
 
+function ToolbarPageHeading() {
+  const pathname = usePathname();
+  const { t } = useTranslation('common');
+  const pathWithoutLocale = stripLocale(pathname);
+  const { getCurrentItem } = useMenu(pathWithoutLocale);
+  const allMenus = [...MENU_SIDEBAR_MAIN, ...MENU_SIDEBAR_WORKSPACES, ...MENU_SIDEBAR_RESOURCES];
+  const item = getCurrentItem(allMenus);
+
+  if (!item) return null;
+
+  return (
+    <div className="flex items-center gap-2">
+      {item.icon && <item.icon className="size-4 text-muted-foreground" />}
+      <h1 className="text-sm font-medium leading-none text-foreground">
+        {item.title ? t(item.title) : ''}
+      </h1>
+    </div>
+  );
+}
+
 export {
   Toolbar,
   ToolbarActions,
   ToolbarBreadcrumbs,
   ToolbarHeading,
+  ToolbarPageHeading,
   ToolbarPageTitle,
   ToolbarDescription
 };

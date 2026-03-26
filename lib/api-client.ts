@@ -15,8 +15,10 @@ export async function ordratFetch<T = unknown>(
 
   const { _retry, ...fetchOptions } = options;
 
+  // Don't set Content-Type for FormData — the browser sets it with the multipart boundary
+  const isFormData = fetchOptions.body instanceof FormData;
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...(fetchOptions.headers as Record<string, string> | undefined),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };

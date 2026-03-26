@@ -16,10 +16,12 @@ import { SidebarPrimary } from './sidebar-primary';
 import { SidebarSecondary } from '../sidebar-secondary';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useParams } from 'next/navigation';
 
 export function HeaderLogo() {
   const pathname = usePathname();
+  const params = useParams();
+  const locale = (params?.locale as string) ?? 'en';
   const { isMobile, sidebarToggle } = useLayout();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
@@ -34,7 +36,7 @@ export function HeaderLogo() {
       <div className="flex items-center w-full">
         {/* Logo icon — collapsed sidebar */}
         <div className="flex items-center justify-center shrink-0 border-e border-border w-(--sidebar-collapsed-width) h-(--header-height) bg-muted">
-          <Link href="/dashboard">
+          <Link href={`/${locale}/dashboard`}>
             <img
               src={toAbsoluteUrl('/media/app/logo.svg')}
               className="dark:hidden h-7 w-auto"
@@ -74,7 +76,7 @@ export function HeaderLogo() {
 
         {/* Sidebar header — logo + toggle */}
         <div className="flex w-full grow items-center justify-between px-5 gap-2.5">
-          <Link href="/dashboard" className="flex items-center">
+          <Link href={`/${locale}/dashboard`} className="flex items-center">
             <img
               src={toAbsoluteUrl('/media/app/default-logo.svg')}
               className="dark:hidden h-10 w-auto"
@@ -94,7 +96,7 @@ export function HeaderLogo() {
             onClick={sidebarToggle}
             className="hidden lg:inline-flex text-muted-foreground hover:text-foreground"
           >
-            <PanelRight className="-rotate-180 in-data-[sidebar-open=false]:rotate-0 opacity-100" />
+            <PanelRight className="-rotate-180 in-data-[sidebar-open=false]:rotate-0 rtl:rotate-0 rtl:in-data-[sidebar-open=false]:-rotate-180 opacity-100" />
           </Button>
         </div>
       </div>

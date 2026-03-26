@@ -3,6 +3,17 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { loginWithCredentials, refreshAccessToken } from '@/lib/ordrat-api/auth';
 import { filterKnownRoles } from '@/config/roles';
 
+/** Decode JWT payload without verifying signature (token already verified by backend). */
+function decodeJwtClaims(token: string): Record<string, unknown> {
+  try {
+    const payload = token.split('.')[1];
+    const padded = payload + '='.repeat((4 - (payload.length % 4)) % 4);
+    return JSON.parse(Buffer.from(padded, 'base64url').toString('utf-8'));
+  } catch {
+    return {};
+  }
+}
+
 export const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
@@ -29,8 +40,9 @@ export const authOptions: AuthOptions = {
           throw new Error('Service unavailable, please try again');
         }
 
-        const mainBranch =
-          data.branches.find((b) => b.isMain) ?? data.branches[0] ?? null;
+        // shopId is not in the response body — it lives as a JWT claim
+        const claims = decodeJwtClaims(data.accessToken);
+        const shopId = typeof claims.shopId === 'string' ? claims.shopId : '';
 
         return {
           id: data.id,
@@ -38,13 +50,13 @@ export const authOptions: AuthOptions = {
           email: data.email,
           accessToken: data.accessToken,
           refreshToken: data.refreshToken,
-          shopId: data.shopId,
+          shopId,
           sellerId: data.id,
           roles: filterKnownRoles(data.roles),
-          branches: data.branches,
-          mainBranchId: mainBranch?.id ?? null,
-          userType: data.userType,
-          subdomain: data.subdomain,
+          branches: [],
+          mainBranchId: null,
+          userType: '',
+          subdomain: '',
         };
       },
     }),
@@ -52,6 +64,25 @@ export const authOptions: AuthOptions = {
 
   callbacks: {
     async jwt({ token, user, trigger }) {
+      // Session update triggered from client (e.g. after shop creation) — force token refresh
+      // so the new shopId claim is picked up without requiring sign-out
+      if (trigger === 'update') {
+        try {
+          const refreshed = await refreshAccessToken(token.refreshToken);
+          const refreshedClaims = decodeJwtClaims(refreshed.accessToken);
+          return {
+            ...token,
+            accessToken: refreshed.accessToken,
+            refreshToken: refreshed.refreshToken,
+            accessTokenExpiresAt: Date.now() + 55 * 60 * 1000,
+            shopId: typeof refreshedClaims.shopId === 'string' ? refreshedClaims.shopId : token.shopId,
+            error: undefined,
+          };
+        } catch {
+          return token;
+        }
+      }
+
       // Initial sign-in — populate JWT from user object
       if (trigger === 'signIn' && user) {
         return {
@@ -79,19 +110,19 @@ export const authOptions: AuthOptions = {
       // Attempt silent token refresh
       try {
         const refreshed = await refreshAccessToken(token.refreshToken);
-        const mainBranch =
-          refreshed.branches.find((b) => b.isMain) ??
-          refreshed.branches[0] ??
-          null;
+        const refreshedClaims = decodeJwtClaims(refreshed.accessToken);
+        const refreshedShopId =
+          typeof refreshedClaims.shopId === 'string'
+            ? refreshedClaims.shopId
+            : token.shopId;
 
         return {
           ...token,
           accessToken: refreshed.accessToken,
           refreshToken: refreshed.refreshToken,
           accessTokenExpiresAt: Date.now() + 55 * 60 * 1000,
+          shopId: refreshedShopId,
           roles: filterKnownRoles(refreshed.roles),
-          branches: refreshed.branches,
-          mainBranchId: mainBranch?.id ?? null,
           error: undefined,
         };
       } catch {
@@ -118,8 +149,8 @@ export const authOptions: AuthOptions = {
   },
 
   pages: {
-    signIn: '/signin',
-    error: '/signin',
+    signIn: '/en/signin',
+    error: '/en/signin',
   },
 
   session: {

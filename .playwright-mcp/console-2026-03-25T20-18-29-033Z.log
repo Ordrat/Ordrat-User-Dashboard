@@ -1,0 +1,2 @@
+[   10442ms] [WARNING] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior @ http://localhost:3000/_next/static/chunks/979b6_next_dist_2a67324b._.js:2297
+[   56846ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://api.ordrat.com/api/Shop/Update:0

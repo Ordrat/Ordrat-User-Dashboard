@@ -46,61 +46,62 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { usePathname } from 'next/navigation';
+import { usePathname, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 
 const menuItems = [
   {
     icon: UserCircle,
-    tooltip: 'Profile',
+    tooltipKey: 'sidebar.account',
     path: '#',
     rootPath: '#',
   },
   {
     icon: BarChart3,
-    tooltip: 'Dashboard',
+    tooltipKey: 'nav.dashboard',
     path: '/dashboard',
     rootPath: '/dashboard'
   },
   {
     icon: Settings,
-    tooltip: 'Account',
+    tooltipKey: 'sidebar.account',
     path: '#',
     rootPath: '#',
   },
   {
     icon: Users,
-    tooltip: 'Network',
+    tooltipKey: 'sidebar.network',
     path: '#',
     rootPath: '#',
   },
   {
     icon: ShieldUser,
-    tooltip: 'Authentication',
+    tooltipKey: 'sidebar.authentication',
     path: '#',
     rootPath: '#',
   },
   {
     icon: FolderCode,
-    tooltip: 'Security Logs',
+    tooltipKey: 'sidebar.securityLogs',
     path: '#',
     rootPath: '#',
   },
   {
     icon: ScrollText,
-    tooltip: 'Files',
+    tooltipKey: 'sidebar.files',
     path: '#',
     rootPath: '#',
   },
   {
     icon: Bell,
-    tooltip: 'Notifications',
+    tooltipKey: 'nav.notifications',
     path: '#',
     rootPath: '#',
   },
   {
     icon: CheckSquare,
-    tooltip: 'ACL',
+    tooltipKey: 'sidebar.acl',
     path: '#',
     rootPath: '#',
   },
@@ -108,6 +109,9 @@ const menuItems = [
 
 export function SidebarPrimary() {
   const pathname = usePathname();
+  const params = useParams();
+  const locale = (params?.locale as string) ?? 'en';
+  const { t } = useTranslation('common');
   const [selectedMenuItem, setSelectedMenuItem] = useState(menuItems[1]);
   const { data: session } = useSession();
 
@@ -131,30 +135,35 @@ export function SidebarPrimary() {
       {/* Navigation */}
       <ScrollArea className="grow w-full h-[calc(100vh-13rem)] lg:h-[calc(100vh-5.5rem)]">
         <div className="grow gap-1 shrink-0 flex items-center flex-col">
-          {menuItems.map((item, index) => (
-            <Tooltip key={index}>
-              <TooltipTrigger asChild>
-                <Button
-                  asChild
-                  variant="ghost"
-                  mode="icon"
-                  {...(item === selectedMenuItem
-                    ? { 'data-state': 'open' }
-                    : {})}
-                  className={cn(
-                    'shrink-0 rounded-md size-9',
-                    'data-[state=open]:bg-primary data-[state=open]:text-primary-foreground',
-                    'hover:text-foreground',
-                  )}
-                >
-                  <Link href={item.path}>
-                    <item.icon className="size-4.5!" />
-                  </Link>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">{item.tooltip}</TooltipContent>
-            </Tooltip>
-          ))}
+          {menuItems.map((item, index) => {
+            const href = item.path && item.path !== '#'
+              ? `/${locale}${item.path}`
+              : '#';
+            return (
+              <Tooltip key={index}>
+                <TooltipTrigger asChild>
+                  <Button
+                    asChild
+                    variant="ghost"
+                    mode="icon"
+                    {...(item === selectedMenuItem
+                      ? { 'data-state': 'open' }
+                      : {})}
+                    className={cn(
+                      'shrink-0 rounded-md size-9',
+                      'data-[state=open]:bg-primary data-[state=open]:text-primary-foreground',
+                      'hover:text-foreground',
+                    )}
+                  >
+                    <Link href={href}>
+                      <item.icon className="size-4.5!" />
+                    </Link>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side={locale === 'ar' ? 'left' : 'right'}>{t(item.tooltipKey)}</TooltipContent>
+              </Tooltip>
+            );
+          })}
         </div>
       </ScrollArea>
 
@@ -181,7 +190,7 @@ export function SidebarPrimary() {
               </AvatarIndicator>
             </Avatar>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-64 mb-4" side="right" align="start" sideOffset={11}>
+          <DropdownMenuContent className="w-64 mb-4" side={locale === 'ar' ? 'left' : 'right'} align="start" sideOffset={11}>
             {/* User Information Section */}
             <div className="flex items-center gap-3 px-3 py-2">
               <Avatar>
@@ -198,7 +207,7 @@ export function SidebarPrimary() {
             
             <DropdownMenuItem className="cursor-pointer py-1 rounded-md border border-border hover:bg-muted">
               <Clock/>
-              <span>Set availability</span>
+              <span>{t('sidebar.setAvailability')}</span>
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />
@@ -206,17 +215,17 @@ export function SidebarPrimary() {
             {/* Core Actions */}
             <DropdownMenuItem>
               <Target/>
-              <span>My Projects</span>
+              <span>{t('sidebar.myProjects')}</span>
             </DropdownMenuItem>
 
             <DropdownMenuItem>
               <Users/>
-              <span>Team Management</span>
+              <span>{t('sidebar.teamManagement')}</span>
             </DropdownMenuItem>
 
             <DropdownMenuItem>
               <Building2/>
-              <span>Organization</span>
+              <span>{t('sidebar.organization')}</span>
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />
@@ -224,17 +233,17 @@ export function SidebarPrimary() {
             {/* Settings */}
             <DropdownMenuItem>
               <User/>
-              <span>Profile Settings</span>
+              <span>{t('sidebar.profileSettings')}</span>
             </DropdownMenuItem>
 
             <DropdownMenuItem>
               <Settings/>
-              <span>Preferences</span>
+              <span>{t('sidebar.preferences')}</span>
             </DropdownMenuItem>
 
             <DropdownMenuItem>
               <Shield/>
-              <span>Security</span>
+              <span>{t('sidebar.security')}</span>
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />
@@ -243,27 +252,27 @@ export function SidebarPrimary() {
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
                 <Zap/>
-                <span>Developer Tools</span>
+                <span>{t('sidebar.developerTools')}</span>
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent className="w-48">
-                <DropdownMenuItem>API Documentation</DropdownMenuItem>
-                <DropdownMenuItem>Code Repository</DropdownMenuItem>
-                <DropdownMenuItem>Testing Suite</DropdownMenuItem>
+                <DropdownMenuItem>{t('sidebar.apiDocs')}</DropdownMenuItem>
+                <DropdownMenuItem>{t('sidebar.codeRepo')}</DropdownMenuItem>
+                <DropdownMenuItem>{t('sidebar.testingSuite')}</DropdownMenuItem>
               </DropdownMenuSubContent>
             </DropdownMenuSub>
 
             <DropdownMenuItem>
               <Download/>
-              <span>Download SDK</span>
+              <span>{t('sidebar.downloadSdk')}</span>
               <ExternalLink className="size-3 ms-auto" />
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />
 
             {/* Action Items */}
-            <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/signin' })}>
+            <DropdownMenuItem onClick={() => signOut({ callbackUrl: `/${locale}/signin` })}>
               <LogOut/>
-              <span>Sign out</span>
+              <span>{t('nav.signOut')}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
