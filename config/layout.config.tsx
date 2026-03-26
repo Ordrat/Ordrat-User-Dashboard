@@ -10,35 +10,24 @@ import {
   Bell,
   Headphones,
   FileText,
-  Tag,
-  Truck,
+  GitBranch,
 } from "lucide-react";
 
 export const MENU_SIDEBAR_MAIN: MenuConfig = [
   {
     children: [
       {
-        title: 'Dashboard',
+        title: 'nav.dashboard',
         path: '/dashboard',
         icon: LayoutDashboard,
       },
       {
-        title: 'Orders',
-        path: '#',
-        icon: ShoppingCart,
-      },
-      {
-        title: 'Products',
-        path: '#',
-        icon: Package,
-      },
-      {
-        title: 'Customers',
+        title: 'nav.customers',
         path: '#',
         icon: Users,
       },
       {
-        title: 'Analytics',
+        title: 'nav.analytics',
         path: '#',
         icon: BarChart2,
       },
@@ -48,15 +37,25 @@ export const MENU_SIDEBAR_MAIN: MenuConfig = [
 
 export const MENU_SIDEBAR_RESOURCES: MenuConfig = [
   {
-    title: 'Resources',
+    title: 'nav.resources',
     children: [
       {
-        title: 'Help Center',
+        title: 'nav.notifications',
+        path: '#',
+        icon: Bell,
+      },
+      {
+        title: 'nav.settings',
+        path: '#',
+        icon: Settings,
+      },
+      {
+        title: 'nav.helpCenter',
         path: '#',
         icon: Headphones,
       },
       {
-        title: 'Documentation',
+        title: 'nav.documentation',
         path: '#',
         icon: FileText,
       },
@@ -66,32 +65,27 @@ export const MENU_SIDEBAR_RESOURCES: MenuConfig = [
 
 export const MENU_SIDEBAR_WORKSPACES: MenuConfig = [
   {
-    title: 'Store',
+    title: 'nav.store',
     children: [
       {
-        title: 'My Store',
-        path: '#',
+        title: 'nav.myShop',
+        path: '/shop',
         icon: Store,
       },
       {
-        title: 'Promotions',
-        path: '#',
-        icon: Tag,
+        title: 'nav.branches',
+        path: '/branches',
+        icon: GitBranch,
       },
       {
-        title: 'Shipping',
+        title: 'nav.orders',
         path: '#',
-        icon: Truck,
+        icon: ShoppingCart,
       },
       {
-        title: 'Notifications',
+        title: 'nav.products',
         path: '#',
-        icon: Bell,
-      },
-      {
-        title: 'Settings',
-        path: '#',
-        icon: Settings,
+        icon: Package,
       },
     ],
   }
@@ -99,7 +93,7 @@ export const MENU_SIDEBAR_WORKSPACES: MenuConfig = [
 
 export const MENU_TOOLBAR: MenuConfig = [
   {
-    title: 'Overview',
+    title: 'nav.overview',
     path: '/dashboard',
     icon: LayoutDashboard,
   },

@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
@@ -13,7 +14,10 @@ import {
 import { TriangleAlert } from 'lucide-react';
 
 export default function VerifyOtpPage() {
+  const { t } = useTranslation('common');
   const router = useRouter();
+  const params = useParams();
+  const locale = (params?.locale as string) ?? 'en';
   const [otp, setOtp] = useState('');
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -23,11 +27,11 @@ export default function VerifyOtpPage() {
   useEffect(() => {
     const saved = localStorage.getItem('ValidationEmail');
     if (!saved) {
-      router.replace('/forgot-password');
+      router.replace(`/${locale}/forgot-password`);
       return;
     }
     setEmail(saved);
-  }, [router]);
+  }, [router, locale]);
 
   async function handleVerify() {
     if (otp.length !== 6) return;
@@ -46,13 +50,13 @@ export default function VerifyOtpPage() {
     setLoading(false);
 
     if (!res.ok) {
-      setError('Invalid or expired code. Please try again.');
+      setError(t('auth.invalidCode'));
       return;
     }
 
     const data = await res.json();
     localStorage.setItem('ResetToken', data.resetToken ?? data.ResetToken ?? '');
-    router.push('/change-password');
+    router.push(`/${locale}/change-password`);
   }
 
   async function handleResend() {
@@ -75,10 +79,10 @@ export default function VerifyOtpPage() {
     <div className="w-full max-w-[400px] space-y-6">
       <div className="space-y-1.5 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">
-          Enter verification code
+          {t('auth.verifyCodeTitle')}
         </h1>
         <p className="text-sm text-muted-foreground">
-          We sent a 6-digit code to{' '}
+          {t('auth.verifyCodeDescription')}{' '}
           <span className="font-medium text-foreground">{email}</span>
         </p>
       </div>
@@ -110,7 +114,7 @@ export default function VerifyOtpPage() {
           disabled={otp.length !== 6 || loading}
           onClick={handleVerify}
         >
-          {loading ? 'Verifying…' : 'Verify code'}
+          {loading ? t('actions.verifying') : t('auth.verifyCode')}
         </Button>
 
         <Button
@@ -119,7 +123,7 @@ export default function VerifyOtpPage() {
           disabled={resending}
           onClick={handleResend}
         >
-          {resending ? 'Resending…' : 'Resend code'}
+          {resending ? t('actions.resending') : t('auth.resendCode')}
         </Button>
       </div>
     </div>

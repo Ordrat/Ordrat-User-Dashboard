@@ -56,19 +56,19 @@ component exists is a violation.
   for variant and class composition — do not invent ad-hoc
   class-merging patterns.
 
-### III. Reference-First Refactoring
+### III. Swagger-First API Contracts
 
-When implementing authentication or any feature that existed in
-the previous dashboard, the old repository
-(`Ordrat-Old-Dashboard` on GitHub) MUST be consulted first.
+All endpoint contracts, request bodies, response shapes, and
+field names MUST be sourced from the Swagger documentation at
+`https://api.ordrat.com/index.html`. This is the **single
+source of truth** for the .NET backend API.
 
-- Copy proven logic, endpoints, and flow from the old repo.
-- Adapt to the current stack: Zod instead of Yup, `fetch`
-  instead of Axios, NextAuth session instead of raw cookies.
-- reCAPTCHA MUST NOT be carried over — it is intentionally
-  removed from this project.
-- Deviations from the old repo's proven flow MUST be justified
-  in the feature spec or PR description.
+- Every new API function in `lib/ordrat-api/` MUST match the
+  exact field names and types from the Swagger spec.
+- reCAPTCHA MUST NOT be used — it is intentionally absent from
+  this project.
+- Deviations from the Swagger contract MUST be justified in the
+  feature spec or PR description.
 
 ### IV. Server-Side Route Protection
 
@@ -83,7 +83,20 @@ implemented server-side via `proxy.ts` (Next.js 15+ pattern).
 - Token refresh uses the `refreshToken` as an HTTP **header**
   (not body) on `POST /api/Auth/RefreshAccessToken`.
 
-### V. Type Safety & Schema Validation
+### V. Internationalisation (i18n) First
+
+All user-visible text MUST use `react-i18next` (`useTranslation('common')`) and
+be sourced from `messages/en.json` and `messages/ar.json`. Hardcoded strings are
+forbidden in components, hooks, and pages.
+
+- Every new text string MUST be added to **both** `messages/en.json` and
+  `messages/ar.json` at the same time.
+- Toolbar, nav, action labels, and error messages are all subject to this rule.
+- The `usePageMeta(title, logo?)` hook (`hooks/use-page-meta.ts`) is the standard
+  way to set the per-page toolbar title and optional logo. Always pass a translated
+  string as `title`.
+
+### VI. Type Safety & Schema Validation
 
 All data crossing system boundaries MUST be validated with Zod
 schemas. TypeScript strict mode is the baseline.
@@ -184,4 +197,4 @@ document except explicit user override during a conversation.
   the runtime development guidance file and MUST stay aligned
   with this constitution.
 
-**Version**: 1.0.0 | **Ratified**: 2026-03-23 | **Last Amended**: 2026-03-23
+**Version**: 1.2.0 | **Ratified**: 2026-03-23 | **Last Amended**: 2026-03-25

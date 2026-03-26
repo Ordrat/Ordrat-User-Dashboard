@@ -80,6 +80,9 @@ importers:
       framer-motion:
         specifier: ^12.38.0
         version: 12.38.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      i18next:
+        specifier: ^25.10.9
+        version: 25.10.9(typescript@5.9.3)
       input-otp:
         specifier: ^1.4.2
         version: 1.4.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -127,7 +130,7 @@ importers:
         version: 7.72.0(react@19.2.4)
       react-i18next:
         specifier: ^15.7.2
-        version: 15.7.4(i18next@25.10.5(typescript@5.9.3))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
+        version: 15.7.4(i18next@25.10.9(typescript@5.9.3))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
       react-is:
         specifier: ^19.2.1
         version: 19.2.4
@@ -3017,10 +3020,10 @@ packages:
   html-parse-stringify@3.0.1:
     resolution: {integrity: sha512-KknJ50kTInJ7qIScF3jeaFRpMpE8/lfiTdzf/twXyPBLAGrLRTmkz3AdTnKeh40X8k9L2fdYwEp/42WGXIRGcg==}
 
-  i18next@25.10.5:
-    resolution: {integrity: sha512-jRnF7eRNsdcnh7AASSgaU3lj/8lJZuHkfsouetnLEDH0xxE1vVi7qhiJ9RhdSPUyzg4ltb7P7aXsFlTk9sxL2w==}
+  i18next@25.10.9:
+    resolution: {integrity: sha512-hQY9/bFoQKGlSKMlaCuLR8w1h5JjieqrsnZvEmj1Ja6Ec7fbyc4cTrCsY9mb9Sd8YQ/swsrKz1S9M8AcvVI70w==}
     peerDependencies:
-      typescript: ^5
+      typescript: ^5 || ^6
     peerDependenciesMeta:
       typescript:
         optional: true
@@ -7480,7 +7483,7 @@ snapshots:
     dependencies:
       void-elements: 3.1.0
 
-  i18next@25.10.5(typescript@5.9.3):
+  i18next@25.10.9(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.2
     optionalDependencies:
@@ -8171,11 +8174,11 @@ snapshots:
     dependencies:
       react: 19.2.4
 
-  react-i18next@15.7.4(i18next@25.10.5(typescript@5.9.3))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3):
+  react-i18next@15.7.4(i18next@25.10.9(typescript@5.9.3))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.2
       html-parse-stringify: 3.0.1
-      i18next: 25.10.5(typescript@5.9.3)
+      i18next: 25.10.9(typescript@5.9.3)
       react: 19.2.4
     optionalDependencies:
       react-dom: 19.2.4(react@19.2.4)

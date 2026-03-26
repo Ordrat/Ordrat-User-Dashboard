@@ -19,6 +19,10 @@ interface LayoutState {
   isMobile: boolean;
   isSidebarOpen: boolean;
   sidebarToggle: () => void;
+  pageTitle: string | null;
+  setPageTitle: (title: string | null) => void;
+  pageLogo: string | null;
+  setPageLogo: (logo: string | null) => void;
 }
 
 // Create the context
@@ -34,6 +38,8 @@ interface LayoutProviderProps {
 export function LayoutProvider({ children, style: customStyle, bodyClassName = '' }: LayoutProviderProps) {
   const isMobile = useIsMobile();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [pageTitle, setPageTitle] = useState<string | null>(null);
+  const [pageLogo, setPageLogo] = useState<string | null>(null);
 
   const defaultStyle: React.CSSProperties = {
     '--sidebar-width': SIDEBAR_WIDTH,
@@ -73,7 +79,11 @@ export function LayoutProvider({ children, style: customStyle, bodyClassName = '
         style,
         isMobile,
         isSidebarOpen,
-        sidebarToggle
+        sidebarToggle,
+        pageTitle,
+        setPageTitle,
+        pageLogo,
+        setPageLogo,
       }}
     >
       <div
@@ -81,6 +91,7 @@ export function LayoutProvider({ children, style: customStyle, bodyClassName = '
         className="flex grow"
         data-sidebar-open={isSidebarOpen}
         style={style}
+        suppressHydrationWarning
       >
         <TooltipProvider delayDuration={0}>
           {children}

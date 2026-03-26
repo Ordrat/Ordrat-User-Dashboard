@@ -1,9 +1,17 @@
+'use client';
+
 import { ReactNode } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import { Card, CardContent } from '@/components/ui/card';
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
+  const params = useParams();
+  const locale = (params?.locale as string) ?? 'en';
+  const { t } = useTranslation('common');
+
   return (
     <>
       <style>
@@ -25,7 +33,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
 
         <div className="lg:rounded-xl lg:border lg:border-border lg:m-5 order-1 lg:order-2 bg-top xxl:bg-center xl:bg-cover bg-no-repeat branded-bg">
           <div className="flex flex-col p-8 lg:p-16 gap-4">
-            <Link href="/">
+            <Link href={`/${locale}`}>
               <img
                 src={toAbsoluteUrl('/media/app/logo.svg')}
                 className="dark:hidden h-[28px] max-w-none"
@@ -40,16 +48,10 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
 
             <div className="flex flex-col gap-3">
               <h3 className="text-2xl font-semibold text-mono">
-                Secure Dashboard Access
+                {t('auth.secureDashboardAccess')}
               </h3>
               <div className="text-base font-medium text-secondary-foreground">
-                A robust authentication gateway ensuring
-                <br /> secure&nbsp;
-                <span className="text-mono font-semibold">
-                  efficient seller access
-                </span>
-                &nbsp;to the Ordrat
-                <br /> Dashboard interface.
+                {t('auth.authDescription')}
               </div>
             </div>
           </div>

@@ -5,9 +5,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { signIn } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff, LoaderCircle, TriangleAlert } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,20 +23,23 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 
-const signinSchema = z.object({
-  email: z.string().min(1, 'Email is required').email('Enter a valid email'),
-  password: z.string().min(1, 'Password is required'),
-  rememberMe: z.boolean(),
-});
-
-type SigninFormValues = z.infer<typeof signinSchema>;
-
 export default function SigninPage() {
+  const { t } = useTranslation('common');
   const router = useRouter();
+  const params = useParams();
+  const locale = (params?.locale as string) ?? 'en';
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') ?? '/dashboard';
+  const callbackUrl = searchParams.get('callbackUrl') ?? `/${locale}/dashboard`;
   const [serverError, setServerError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+
+  const signinSchema = z.object({
+    email: z.string().min(1, t('validation.emailRequired')).email(t('validation.invalidEmail')),
+    password: z.string().min(1, t('validation.passwordRequired')),
+    rememberMe: z.boolean(),
+  });
+
+  type SigninFormValues = z.infer<typeof signinSchema>;
 
   const form = useForm<SigninFormValues>({
     resolver: zodResolver(signinSchema),
@@ -62,11 +66,11 @@ export default function SigninPage() {
       }
 
       if (msg === 'Invalid email or password') {
-        setServerError('Invalid email or password');
+        setServerError(t('auth.invalidCredentials'));
       } else if (msg === 'Email and password are required') {
-        setServerError('Please enter your email and password');
+        setServerError(t('auth.enterCredentials'));
       } else {
-        setServerError('Unable to sign in. Please try again.');
+        setServerError(t('auth.unableToSignIn'));
       }
       return;
     }
@@ -83,7 +87,7 @@ export default function SigninPage() {
       >
         <div className="space-y-1.5 pb-3">
           <h1 className="text-2xl font-semibold tracking-tight text-center">
-            Sign in to Ordrat
+            {t('auth.signIn')}
           </h1>
         </div>
 
@@ -101,11 +105,11 @@ export default function SigninPage() {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>{t('auth.email')}</FormLabel>
               <FormControl>
                 <Input
                   type="email"
-                  placeholder="Your email"
+                  placeholder={t('auth.emailPlaceholder')}
                   autoComplete="email"
                   {...field}
                 />
@@ -121,17 +125,17 @@ export default function SigninPage() {
           render={({ field }) => (
             <FormItem>
               <div className="flex justify-between items-center gap-2.5">
-                <FormLabel>Password</FormLabel>
+                <FormLabel>{t('auth.password')}</FormLabel>
                 <Link
-                  href="/forgot-password"
+                  href={`/${locale}/forgot-password`}
                   className="text-sm font-semibold text-foreground hover:text-primary"
                 >
-                  Forgot Password?
+                  {t('auth.forgotPassword')}
                 </Link>
               </div>
               <div className="relative">
                 <Input
-                  placeholder="Your password"
+                  placeholder={t('auth.passwordPlaceholder')}
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
                   {...field}
@@ -173,7 +177,7 @@ export default function SigninPage() {
                   htmlFor="remember-me"
                   className="text-sm leading-none text-muted-foreground cursor-pointer"
                 >
-                  Remember me
+                  {t('auth.rememberMe')}
                 </label>
               </div>
             </FormItem>
@@ -185,7 +189,7 @@ export default function SigninPage() {
             {isSubmitting ? (
               <LoaderCircle className="size-4 animate-spin" />
             ) : null}
-            Continue
+            {t('actions.continue')}
           </Button>
         </div>
       </form>

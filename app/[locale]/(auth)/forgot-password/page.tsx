@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,16 +21,19 @@ import {
 } from '@/components/ui/form';
 import { TriangleAlert, CheckCircle } from 'lucide-react';
 
-const schema = z.object({
-  email: z.string().min(1, 'Email is required').email('Enter a valid email'),
-});
-
-type FormValues = z.infer<typeof schema>;
-
 export default function ForgotPasswordPage() {
+  const { t } = useTranslation('common');
   const router = useRouter();
+  const params = useParams();
+  const locale = (params?.locale as string) ?? 'en';
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  const schema = z.object({
+    email: z.string().min(1, t('validation.emailRequired')).email(t('validation.invalidEmail')),
+  });
+
+  type FormValues = z.infer<typeof schema>;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -51,7 +55,7 @@ export default function ForgotPasswordPage() {
     );
 
     if (!res.ok) {
-      setError('Unable to send reset email. Please try again.');
+      setError(t('auth.unableToSendReset'));
       return;
     }
 
@@ -60,17 +64,17 @@ export default function ForgotPasswordPage() {
     }
 
     setSuccess(true);
-    setTimeout(() => router.push('/verify-otp'), 1500);
+    setTimeout(() => router.push(`/${locale}/verify-otp`), 1500);
   }
 
   return (
     <div className="w-full max-w-[400px] space-y-6">
       <div className="space-y-1.5 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">
-          Forgot password
+          {t('auth.forgotPasswordTitle')}
         </h1>
         <p className="text-sm text-muted-foreground">
-          Enter your email and we&apos;ll send you a reset code
+          {t('auth.forgotPasswordDescription')}
         </p>
       </div>
 
@@ -90,7 +94,7 @@ export default function ForgotPasswordPage() {
               <AlertIcon>
                 <CheckCircle />
               </AlertIcon>
-              <AlertTitle>Reset code sent! Redirecting…</AlertTitle>
+              <AlertTitle>{t('auth.resetCodeSent')}</AlertTitle>
             </Alert>
           )}
 
@@ -99,7 +103,7 @@ export default function ForgotPasswordPage() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>{t('auth.email')}</FormLabel>
                 <FormControl>
                   <Input
                     type="email"
@@ -119,13 +123,13 @@ export default function ForgotPasswordPage() {
             className="w-full"
             disabled={isSubmitting || success}
           >
-            {isSubmitting ? 'Sending…' : 'Send reset code'}
+            {isSubmitting ? t('actions.sending') : t('auth.sendResetCode')}
           </Button>
 
           <p className="text-center text-sm text-muted-foreground">
-            Remember your password?{' '}
-            <Link href="/signin" className="text-foreground hover:underline">
-              Sign in
+            {t('auth.rememberPassword')}{' '}
+            <Link href={`/${locale}/signin`} className="text-foreground hover:underline">
+              {t('auth.signInLink')}
             </Link>
           </p>
         </form>

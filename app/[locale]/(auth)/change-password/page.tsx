@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,36 +20,39 @@ import {
 } from '@/components/ui/form';
 import { TriangleAlert } from 'lucide-react';
 
-const schema = z
-  .object({
-    newPassword: z
-      .string()
-      .min(8, 'Password must be at least 8 characters'),
-    confirmPassword: z.string().min(1, 'Please confirm your password'),
-  })
-  .refine((d) => d.newPassword === d.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  });
-
-type FormValues = z.infer<typeof schema>;
-
 export default function ChangePasswordPage() {
+  const { t } = useTranslation('common');
   const router = useRouter();
+  const params = useParams();
+  const locale = (params?.locale as string) ?? 'en';
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState('');
   const [resetToken, setResetToken] = useState('');
+
+  const schema = z
+    .object({
+      newPassword: z
+        .string()
+        .min(8, t('validation.passwordMin')),
+      confirmPassword: z.string().min(1, t('validation.confirmPasswordRequired')),
+    })
+    .refine((d) => d.newPassword === d.confirmPassword, {
+      message: t('validation.passwordsDoNotMatch'),
+      path: ['confirmPassword'],
+    });
+
+  type FormValues = z.infer<typeof schema>;
 
   useEffect(() => {
     const savedEmail = localStorage.getItem('ValidationEmail');
     const savedToken = localStorage.getItem('ResetToken');
     if (!savedEmail || !savedToken) {
-      router.replace('/forgot-password');
+      router.replace(`/${locale}/forgot-password`);
       return;
     }
     setEmail(savedEmail);
     setResetToken(savedToken);
-  }, [router]);
+  }, [router, locale]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -74,23 +78,23 @@ export default function ChangePasswordPage() {
     );
 
     if (!res.ok) {
-      setError('Failed to reset password. Please start over.');
+      setError(t('auth.resetFailed'));
       return;
     }
 
     localStorage.removeItem('ValidationEmail');
     localStorage.removeItem('ResetToken');
-    router.push('/signin');
+    router.push(`/${locale}/signin`);
   }
 
   return (
     <div className="w-full max-w-[400px] space-y-6">
       <div className="space-y-1.5 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">
-          Set new password
+          {t('auth.setNewPasswordTitle')}
         </h1>
         <p className="text-sm text-muted-foreground">
-          Choose a strong password for your account
+          {t('auth.setNewPasswordDescription')}
         </p>
       </div>
 
@@ -110,7 +114,7 @@ export default function ChangePasswordPage() {
             name="newPassword"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>New password</FormLabel>
+                <FormLabel>{t('auth.newPassword')}</FormLabel>
                 <FormControl>
                   <Input
                     type="password"
@@ -129,7 +133,7 @@ export default function ChangePasswordPage() {
             name="confirmPassword"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Confirm password</FormLabel>
+                <FormLabel>{t('auth.confirmPassword')}</FormLabel>
                 <FormControl>
                   <Input
                     type="password"
@@ -149,7 +153,7 @@ export default function ChangePasswordPage() {
             className="w-full"
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Saving…' : 'Set new password'}
+            {isSubmitting ? t('actions.saving') : t('auth.setNewPassword')}
           </Button>
         </form>
       </Form>

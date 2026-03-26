@@ -1,0 +1,25 @@
+import { ReactNode } from 'react';
+import { redirect } from 'next/navigation';
+
+const LOCALES = ['en', 'ar'] as const;
+type Locale = (typeof LOCALES)[number];
+
+export function generateStaticParams() {
+  return LOCALES.map((locale) => ({ locale }));
+}
+
+export default async function LocaleLayout({
+  children,
+  params,
+}: {
+  children: ReactNode;
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+
+  if (!LOCALES.includes(locale as Locale)) {
+    redirect('/en');
+  }
+
+  return <>{children}</>;
+}
