@@ -225,6 +225,21 @@ npm run lint       # ESLint
 npx tsc --noEmit   # TypeScript type check only
 ```
 
+## Package Manager — pnpm Only
+
+**This project uses pnpm.** Vercel detects the package manager from `pnpm-lock.yaml` and runs `pnpm install --frozen-lockfile` on every deploy. Using `npm install` locally will update `package.json` but NOT `pnpm-lock.yaml`, causing the Vercel build to fail with `ERR_PNPM_OUTDATED_LOCKFILE`.
+
+**Always use pnpm to add/remove packages:**
+
+```bash
+pnpm add <package>          # add a dependency
+pnpm add -D <package>       # add a dev dependency
+pnpm remove <package>       # remove a dependency
+pnpm install                # install all deps (after pulling changes)
+```
+
+Never use `npm install <package>` or `yarn add <package>` — they will desync the lockfile.
+
 ## Dev vs Build — When to Use Each
 
 | Goal | Command |
