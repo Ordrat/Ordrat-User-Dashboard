@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -14,13 +15,18 @@ import {
   GitBranch,
   TriangleAlert,
   Search,
+  Target,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Input, InputAddon, InputGroup } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { TimePicker } from '@/components/ui/time-picker';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Table,
   TableBody,
@@ -57,16 +63,34 @@ import {
 import { useShopProfile } from '@/lib/ordrat-api/shop';
 import { ShopLanguage, type FullBranchResponse } from '@/lib/ordrat-api/schemas';
 
+// ─── Dynamic import: Leaflet map (SSR disabled) ───────────────────────────────
+
+const LocationPicker = dynamic(
+  () => import('@/components/branches/location-picker').then((m) => m.LocationPicker),
+  {
+    ssr: false,
+    loading: () => <div className="h-52 bg-muted rounded-lg animate-pulse" />,
+  },
+);
+
 // ─── Branch form schema ───────────────────────────────────────────────────────
 
 const branchFormSchema = z.object({
   nameEn: z.string().optional(),
-  nameAr: z.string().min(1, 'Required'),
+  nameAr: z.string().optional(),
   zoneName: z.string().min(1, 'Required'),
   phone: z.string().min(1, 'Required'),
-  address: z.string().min(1, 'Required'),
+  address: z.string().optional(),
   latitude: z.string().optional(),
   longitude: z.string().optional(),
+  coverageRadius: z.string().optional(),
+  is24Hours: z.boolean().optional(),
+  openAt: z.string().optional(),
+  closedAt: z.string().optional(),
+  deliveryTime: z.string().optional(),
+  enableDeliveryOrders: z.boolean().optional(),
+  isFixedDelivery: z.boolean().optional(),
+  deliveryCharge: z.string().optional(),
 });
 
 type BranchFormValues = z.infer<typeof branchFormSchema>;
@@ -85,7 +109,7 @@ function BranchFormDialog({
   onOpenChange: (open: boolean) => void;
   branch?: FullBranchResponse;
   shopLanguage: number;
-  onSave: (values: BranchFormValues) => Promise<void>;
+  onSave: (values: BranchFormValues) => Promise<boolean>;
   isPending: boolean;
 }) {
   const { t } = useTranslation('common');
@@ -100,25 +124,64 @@ function BranchFormDialog({
   const form = useForm<BranchFormValues>({
     resolver: zodResolver(branchFormSchema),
     defaultValues: {
-      nameEn: branch?.nameEn ?? branch?.name ?? '',
+      nameEn: branch?.nameEn ?? '',                // BUG FIX: no fallback to branch?.name
       nameAr: branch?.nameAr ?? branch?.name ?? '',
       zoneName: (branch as any)?.zoneName ?? '',
       phone: branch?.phoneNumber ?? '',
       address: branch?.addressText ?? '',
       latitude: branch?.centerLatitude != null ? String(branch.centerLatitude) : '',
       longitude: branch?.centerLongitude != null ? String(branch.centerLongitude) : '',
+      coverageRadius:
+        (branch as any)?.coverageRadius != null
+          ? String((branch as any).coverageRadius)
+          : '5000',
+      is24Hours: (() => {
+        const raw = branch as any;
+        return raw?.openAt === '00:00:00' && raw?.closedAt === '23:59:59';
+      })(),
+      openAt: (() => {
+        const raw = (branch as any)?.openAt;
+        if (!raw || typeof raw !== 'string') return '';
+        return raw.substring(0, 5);
+      })(),
+      closedAt: (() => {
+        const raw = (branch as any)?.closedAt;
+        if (!raw || typeof raw !== 'string') return '';
+        return raw.substring(0, 5);
+      })(),
+      deliveryTime: (() => {
+        const raw = (branch as any)?.deliveryTime;
+        if (!raw || typeof raw !== 'string') return '';
+        return raw.substring(0, 5);
+      })(),
+      enableDeliveryOrders: (branch as any)?.enableDeliveryOrders ?? true,
+      isFixedDelivery: (branch as any)?.isFixedDelivery ?? false,
+      deliveryCharge:
+        (branch as any)?.deliveryCharge != null
+          ? String((branch as any).deliveryCharge)
+          : '',
     },
   });
 
+  // Watch conditional fields
+  const is24Hours = form.watch('is24Hours');
+  const enableDelivery = form.watch('enableDeliveryOrders');
+  const isFixed = form.watch('isFixedDelivery');
+  const lat = Number(form.watch('latitude') || 0);
+  const lng = Number(form.watch('longitude') || 0);
+  const radius = Number(form.watch('coverageRadius') || 0);
+
   async function handleSubmit(values: BranchFormValues) {
-    await onSave(values);
-    form.reset();
-    onOpenChange(false);
+    const success = await onSave(values);
+    if (success) {
+      form.reset();
+      onOpenChange(false);
+    }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>
             {branch ? t('branches.edit') : t('branches.add')}
@@ -128,122 +191,307 @@ function BranchFormDialog({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4"
+            className="flex flex-col gap-0"
           >
-            {showEnglish && (
-              <FormField
-                control={form.control}
-                name="nameEn"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('branches.nameEn')}</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+            <ScrollArea className="h-[65vh]">
+              <div className="space-y-4 pe-3 pb-2">
+
+                {/* Map section */}
+                <div className="space-y-2">
+                  <LocationPicker
+                    lat={lat}
+                    lng={lng}
+                    radius={radius}
+                    onLocationChange={(newLat, newLng, address) => {
+                      form.setValue('latitude', String(newLat));
+                      form.setValue('longitude', String(newLng));
+                      if (address) form.setValue('address', address);
+                    }}
+                  />
+                </div>
+
+                {/* Coverage radius */}
+                <FormField
+                  control={form.control}
+                  name="coverageRadius"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('branches.coverageRadius')}</FormLabel>
+                      <FormControl>
+                        <InputGroup>
+                          <InputAddon mode="icon" className="bg-brand border-brand [&_svg]:text-white">
+                            <Target />
+                          </InputAddon>
+                          <Input type="number" min={0} {...field} />
+                        </InputGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Names side by side */}
+                {(showEnglish || showArabic) && (
+                  <div className="grid grid-cols-2 gap-4">
+                    {showEnglish && (
+                      <FormField
+                        control={form.control}
+                        name="nameEn"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t('branches.nameEn')}</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+                    {showArabic && (
+                      <FormField
+                        control={form.control}
+                        name="nameAr"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t('branches.nameAr')}</FormLabel>
+                            <FormControl>
+                              <Input {...field} dir="rtl" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+                  </div>
                 )}
-              />
-            )}
 
-            {showArabic && (
-              <FormField
-                control={form.control}
-                name="nameAr"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('branches.nameAr')}</FormLabel>
-                    <FormControl>
-                      <Input {...field} dir="rtl" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+                {/* Zone */}
+                <FormField
+                  control={form.control}
+                  name="zoneName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('branches.zoneName')}</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="zoneName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('branches.zoneName')}</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                {/* Phone */}
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('branches.phone')}</FormLabel>
+                      <FormControl>
+                        <Input type="tel" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('branches.phone')}</FormLabel>
-                  <FormControl>
-                    <Input type="tel" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                {/* Address */}
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('branches.address')}</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('branches.address')}</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                {/* Lat / Lng */}
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="latitude"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('branches.latitude')}</FormLabel>
+                        <FormControl>
+                          <Input type="number" step="any" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="longitude"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('branches.longitude')}</FormLabel>
+                        <FormControl>
+                          <Input type="number" step="any" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="latitude"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('branches.latitude')}</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="any" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                {/* Working hours section */}
+                <div className="space-y-3 rounded-lg border border-border p-3">
+                  <p className="text-sm font-medium">{t('branches.workingHours')}</p>
 
-              <FormField
-                control={form.control}
-                name="longitude"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('branches.longitude')}</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="any" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                  {/* Open 24 Hours checkbox */}
+                  <FormField
+                    control={form.control}
+                    name="is24Hours"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-center gap-2">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value ?? false}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel className="cursor-pointer font-normal">
+                            {t('branches.open24Hours')}
+                          </FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
 
-            <DialogFooter>
+                  {/* Time pickers (hidden when 24h) */}
+                  {!is24Hours && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="openAt"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t('branches.openAt')}</FormLabel>
+                            <FormControl>
+                              <TimePicker value={field.value} onChange={field.onChange} disabled={field.disabled} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="closedAt"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t('branches.closedAt')}</FormLabel>
+                            <FormControl>
+                              <TimePicker value={field.value} onChange={field.onChange} disabled={field.disabled} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Delivery section */}
+                <div className="space-y-3 rounded-lg border border-border p-3">
+                  <p className="text-sm font-medium">{t('branches.deliverySettings')}</p>
+
+                  {/* Delivery Time */}
+                  <FormField
+                    control={form.control}
+                    name="deliveryTime"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('branches.deliveryTime')}</FormLabel>
+                        <FormControl>
+                          <TimePicker value={field.value} onChange={field.onChange} disabled={field.disabled} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Enable Delivery Orders */}
+                  <FormField
+                    control={form.control}
+                    name="enableDeliveryOrders"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
+                          <FormLabel className="font-normal">
+                            {t('branches.enableDelivery')}
+                          </FormLabel>
+                          <FormControl>
+                            <Switch
+                              checked={field.value ?? true}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Fixed Delivery (only when delivery enabled) */}
+                  {enableDelivery && (
+                    <FormField
+                      control={form.control}
+                      name="isFixedDelivery"
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
+                            <FormLabel className="font-normal">
+                              {t('branches.fixedDelivery')}
+                            </FormLabel>
+                            <FormControl>
+                              <Switch
+                                checked={field.value ?? false}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  {/* Delivery Charge (only when fixed delivery is on) */}
+                  {enableDelivery && isFixed && (
+                    <FormField
+                      control={form.control}
+                      name="deliveryCharge"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t('branches.deliveryCharge')}</FormLabel>
+                          <FormControl>
+                            <Input type="number" min={0} step="0.01" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </div>
+
+              </div>
+            </ScrollArea>
+
+            {/* Footer outside scroll area */}
+            <DialogFooter className="pt-4">
               <DialogClose asChild>
                 <Button type="button" variant="outline">
                   {t('actions.cancel')}
                 </Button>
               </DialogClose>
-              <Button type="submit" disabled={isPending}>
-                {isPending ? (
-                  <LoaderCircle className="size-4 animate-spin" />
-                ) : null}
+              <Button type="submit" disabled={isPending} className="bg-brand hover:bg-brand/90 text-brand-foreground">
+                {isPending && <LoaderCircle className="size-4 animate-spin" />}
                 {t('actions.save')}
               </Button>
             </DialogFooter>
@@ -270,8 +518,7 @@ function DeleteBranchDialog({
   isPending: boolean;
 }) {
   const { t } = useTranslation('common');
-  const branchName =
-    branch?.nameEn ?? branch?.nameAr ?? t('branches.branch');
+  const branchName = branch?.nameEn ?? branch?.nameAr ?? t('branches.branch');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -280,7 +527,7 @@ function DeleteBranchDialog({
           <DialogTitle>{t('branches.delete')}</DialogTitle>
         </DialogHeader>
         <p className="text-sm text-muted-foreground">
-          {t('branches.deleteConfirm')}
+          {t('branches.deleteConfirm', { name: branchName })}
         </p>
         <DialogFooter>
           <DialogClose asChild>
@@ -347,44 +594,51 @@ export default function BranchesPage() {
         });
 
   function buildInput(values: BranchFormValues): Omit<BranchInput, 'shopId'> {
+    const is24h = values.is24Hours ?? false;
+    const hasDelivery = values.enableDeliveryOrders ?? true;
+    const isFixed = hasDelivery && (values.isFixedDelivery ?? false);
     return {
       nameEn: values.nameEn || undefined,
-      nameAr: values.nameAr,
+      nameAr: values.nameAr ?? '',
       zoneName: values.zoneName,
       phoneNumber: values.phone,
-      addressText: values.address,
+      addressText: values.address || '',
       centerLatitude: values.latitude ? Number(values.latitude) : 0,
       centerLongitude: values.longitude ? Number(values.longitude) : 0,
-      openAt: '09:00:00',
-      closedAt: '22:00:00',
-      deliveryTime: '30',
-      coverageRadius: 500,
-      enableDeliveryOrders: true,
-      isFixedDelivery: false,
-      deliveryCharge: 0,
+      coverageRadius: values.coverageRadius ? Number(values.coverageRadius) : 0,
+      openAt: is24h ? '00:00:00' : (values.openAt ? `${values.openAt}:00` : '09:00:00'),
+      closedAt: is24h ? '23:59:59' : (values.closedAt ? `${values.closedAt}:00` : '22:00:00'),
+      deliveryTime: values.deliveryTime ? `${values.deliveryTime}:00` : '00:30:00',
+      enableDeliveryOrders: hasDelivery,
+      isFixedDelivery: isFixed,
+      deliveryCharge: isFixed ? Number(values.deliveryCharge || 0) : 0,
       deliveryPerKilo: 1,
       minimumDeliveryCharge: 1,
     };
   }
 
-  async function handleCreate(values: BranchFormValues) {
+  async function handleCreate(values: BranchFormValues): Promise<boolean> {
     try {
       await createBranch.mutateAsync(buildInput(values));
       toast.success(t('branches.createSuccess'));
-    } catch {
+      return true;
+    } catch (err) {
+      console.error('[handleCreate]', err);
       toast.error(t('branches.createError'));
-      throw new Error('create failed');
+      return false;
     }
   }
 
-  async function handleEdit(values: BranchFormValues) {
-    if (!editBranch) return;
+  async function handleEdit(values: BranchFormValues): Promise<boolean> {
+    if (!editBranch) return false;
     try {
       await updateBranch.mutateAsync({ id: editBranch.id, input: buildInput(values) });
       toast.success(t('branches.updateSuccess'));
-    } catch {
+      return true;
+    } catch (err) {
+      console.error('[handleEdit]', err);
       toast.error(t('branches.updateError'));
-      throw new Error('update failed');
+      return false;
     }
   }
 
@@ -434,7 +688,7 @@ export default function BranchesPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <Button onClick={() => setCreateOpen(true)}>
+        <Button onClick={() => setCreateOpen(true)} className="bg-brand hover:bg-brand/90 text-brand-foreground">
           <Plus className="size-4" />
           {t('branches.add')}
         </Button>
@@ -445,7 +699,7 @@ export default function BranchesPage() {
         <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
           <GitBranch className="size-12 text-muted-foreground" />
           <p className="text-muted-foreground">{t('branches.empty')}</p>
-          <Button onClick={() => setCreateOpen(true)}>
+          <Button onClick={() => setCreateOpen(true)} className="bg-brand hover:bg-brand/90 text-brand-foreground">
             <Plus className="size-4" />
             {t('branches.add')}
           </Button>

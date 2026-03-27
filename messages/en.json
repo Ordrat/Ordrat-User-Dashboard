@@ -208,6 +208,16 @@
     "closed": "Closed",
     "openTime": "Open Time",
     "closeTime": "Close Time",
+    "timePicker": {
+      "placeholder": "Select time",
+      "selectedTime": "Selected Time",
+      "hour": "Hour",
+      "minute": "Minute",
+      "period": "Period",
+      "customMinute": "Exact Minute",
+      "am": "AM",
+      "pm": "PM"
+    },
     "saveSuccess": "Working hours saved",
     "saveError": "Failed to save working hours"
   },
@@ -237,7 +247,18 @@
     "deleteSuccess": "Branch deleted",
     "deleteError": "Failed to delete branch",
     "loadError": "Failed to load branches",
-    "noResults": "No results for \"{{query}}\""
+    "noResults": "No results for \"{{query}}\"",
+    "coverageRadius": "Coverage Radius (m)",
+    "workingHours": "Working Hours",
+    "open24Hours": "Open 24 Hours",
+    "openAt": "Opening At",
+    "closedAt": "Closed At",
+    "deliverySettings": "Delivery",
+    "deliveryTime": "Delivery Time",
+    "enableDelivery": "Enable Delivery Orders",
+    "fixedDelivery": "Fixed Delivery Charge",
+    "deliveryCharge": "Delivery Charge",
+    "searchLocation": "Search location..."
   },
   "toolbar": {
     "sort": "Sort",

@@ -45,7 +45,9 @@ export async function ordratFetch<T = unknown>(
   }
 
   if (!res.ok) {
-    throw new Error(`API error ${res.status}: ${path}`);
+    let errBody = '';
+    try { errBody = await res.text(); } catch { /* ignore */ }
+    throw new Error(`API error ${res.status}: ${path}${errBody ? ` — ${errBody}` : ''}`);
   }
 
   // Handle empty responses (204 No Content)

@@ -463,7 +463,7 @@ export default function ShopProfilePage() {
           </Card>
 
           <div className="flex justify-end">
-            <Button type="submit" disabled={updateShop.isPending || !canSave}>
+            <Button type="submit" disabled={updateShop.isPending || !canSave} className="bg-brand hover:bg-brand/90 text-brand-foreground">
               {updateShop.isPending && <LoaderCircle className="size-4 animate-spin" />}
               {t('actions.save')}
             </Button>

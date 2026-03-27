@@ -7,7 +7,7 @@ export default function OfflinePage() {
   const { t } = useTranslation('common');
 
   return (
-    <div className="fixed inset-0 flex flex-col items-center justify-center bg-background">
+    <div className="fixed inset-0 grid place-items-center bg-background">
       {/* Ambient rings */}
       <div
         className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden"
@@ -19,7 +19,7 @@ export default function OfflinePage() {
       </div>
 
       {/* Content card */}
-      <div className="relative z-10 flex flex-col items-center gap-8 text-center px-8">
+      <div className="relative z-10 flex w-full max-w-md flex-col items-center gap-8 px-8 text-center">
         {/* Logo */}
         <div className="flex flex-col items-center gap-2">
           <img

@@ -50,6 +50,13 @@ export default async function RootLayout({
             __html: `(function(){var s=window.location.pathname.split('/');var l=s[1];if(l==='ar'){document.documentElement.dir='rtl';document.documentElement.lang='ar';document.documentElement.classList.add('font-arabic');}else{document.documentElement.dir='ltr';document.documentElement.lang=l||'en';}})();`,
           }}
         />
+        {process.env.NODE_ENV === 'development' && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `if('serviceWorker'in navigator){navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(sw){sw.unregister();});})}`,
+            }}
+          />
+        )}
         {/* PWA meta tags */}
         <link rel="apple-touch-icon" href="/media/app/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />

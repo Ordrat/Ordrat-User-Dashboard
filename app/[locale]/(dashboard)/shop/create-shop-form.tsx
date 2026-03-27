@@ -409,7 +409,7 @@ export function CreateShopForm() {
           </Card>
 
           <div className="flex justify-end">
-            <Button type="submit" disabled={createShop.isPending}>
+            <Button type="submit" disabled={createShop.isPending} className="bg-brand hover:bg-brand/90 text-brand-foreground">
               {createShop.isPending && <LoaderCircle className="mr-2 size-4 animate-spin" />}
               {t('shop.createShop')}
             </Button>

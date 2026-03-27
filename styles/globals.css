@@ -46,6 +46,8 @@ html.font-arabic * {
   --input: var(--color-zinc-200);
   --ring: var(--color-zinc-400);
   --radius: 0.5rem;
+  --brand: #B91C1C;
+  --brand-foreground: var(--color-white);
 }
 
 .dark {
@@ -73,6 +75,8 @@ html.font-arabic * {
   --border: var(--color-zinc-800);
   --input: var(--color-zinc-800);
   --ring: var(--color-zinc-600);
+  --brand: #B91C1C;
+  --brand-foreground: var(--color-white);
 }
 
 /** Theme Setup **/
@@ -94,6 +98,8 @@ html.font-arabic * {
   --color-secondary-foreground: var(--secondary-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
 
   /** Base Styles **/
   --color-border: var(--border);

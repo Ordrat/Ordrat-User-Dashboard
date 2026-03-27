@@ -56,25 +56,18 @@ export async function searchBranches(
   return z.array(FullBranchSchema).parse(data);
 }
 
-export async function createBranch(
-  input: BranchInput,
-): Promise<FullBranchResponse> {
-  const data = await ordratFetch<unknown>('/api/Branch/Create', {
+export async function createBranch(input: BranchInput): Promise<void> {
+  await ordratFetch<unknown>('/api/Branch/Create', {
     method: 'POST',
     body: JSON.stringify(input),
   });
-  return FullBranchSchema.parse(data);
 }
 
-export async function updateBranch(
-  id: string,
-  input: BranchInput,
-): Promise<FullBranchResponse> {
-  const data = await ordratFetch<unknown>(`/api/Branch/Update/${id}`, {
+export async function updateBranch(id: string, input: BranchInput): Promise<void> {
+  await ordratFetch<unknown>(`/api/Branch/Update/${id}`, {
     method: 'PUT',
     body: JSON.stringify(input),
   });
-  return FullBranchSchema.parse(data);
 }
 
 export async function deleteBranch(id: string): Promise<void> {
@@ -107,9 +100,8 @@ export function useCreateBranch() {
   const { data: session } = useSession();
   const shopId = session?.user?.shopId ?? '';
 
-  return useMutation({
-    mutationFn: (input: Omit<BranchInput, 'shopId'>) =>
-      createBranch({ ...input, shopId }),
+  return useMutation<void, Error, Omit<BranchInput, 'shopId'>>({
+    mutationFn: (input) => createBranch({ ...input, shopId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['branches', shopId] });
     },
@@ -121,14 +113,8 @@ export function useUpdateBranch() {
   const { data: session } = useSession();
   const shopId = session?.user?.shopId ?? '';
 
-  return useMutation({
-    mutationFn: ({
-      id,
-      input,
-    }: {
-      id: string;
-      input: Omit<BranchInput, 'shopId'>;
-    }) => updateBranch(id, { ...input, shopId }),
+  return useMutation<void, Error, { id: string; input: Omit<BranchInput, 'shopId'> }>({
+    mutationFn: ({ id, input }) => updateBranch(id, { ...input, shopId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['branches', shopId] });
     },

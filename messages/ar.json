@@ -208,6 +208,16 @@
     "closed": "مغلق",
     "openTime": "وقت الفتح",
     "closeTime": "وقت الإغلاق",
+    "timePicker": {
+      "placeholder": "اختر الوقت",
+      "selectedTime": "الوقت المحدد",
+      "hour": "الساعة",
+      "minute": "الدقيقة",
+      "period": "الفترة",
+      "customMinute": "الدقيقة المحددة",
+      "am": "ص",
+      "pm": "م"
+    },
     "saveSuccess": "تم حفظ ساعات العمل",
     "saveError": "فشل حفظ ساعات العمل"
   },
@@ -236,7 +246,18 @@
     "deleteSuccess": "تم حذف الفرع",
     "deleteError": "فشل حذف الفرع",
     "loadError": "فشل تحميل الفروع",
-    "noResults": "لا توجد نتائج لـ \"{{query}}\""
+    "noResults": "لا توجد نتائج لـ \"{{query}}\"",
+    "coverageRadius": "نطاق التغطية (م)",
+    "workingHours": "ساعات العمل",
+    "open24Hours": "مفتوح 24 ساعة",
+    "openAt": "وقت الفتح",
+    "closedAt": "وقت الإغلاق",
+    "deliverySettings": "التوصيل",
+    "deliveryTime": "وقت التوصيل",
+    "enableDelivery": "تفعيل طلبات التوصيل",
+    "fixedDelivery": "رسوم توصيل ثابتة",
+    "deliveryCharge": "رسوم التوصيل",
+    "searchLocation": "ابحث عن موقع..."
   },
   "toolbar": {
     "sort": "ترتيب",

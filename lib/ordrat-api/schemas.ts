@@ -110,6 +110,13 @@ export const FullBranchSchema = z
     centerLatitude: z.number().nullable().optional(),  // API field, not "latitude"
     centerLongitude: z.number().nullable().optional(), // API field, not "longitude"
     isMain: z.boolean().optional(),
+    openAt: z.string().nullable().optional(),
+    closedAt: z.string().nullable().optional(),
+    deliveryTime: z.string().nullable().optional(),
+    coverageRadius: z.number().nullable().optional(),
+    enableDeliveryOrders: z.boolean().nullable().optional(),
+    isFixedDelivery: z.boolean().nullable().optional(),
+    deliveryCharge: z.number().nullable().optional(),
   })
   .passthrough();
 

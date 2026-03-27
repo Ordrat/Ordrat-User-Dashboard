@@ -10,7 +10,7 @@ export function SidebarSearch() {
     <div className="flex px-5 pt-2.5 shrink-0">
       <InputWrapper className="relative">
         <Input type="search" placeholder={t('actions.search')} onChange={handleInputChange} />
-        <Badge className="absolute end-3 gap-1" variant="outline" size="sm">⌘ K</Badge>
+        <Badge className="absolute end-3 gap-1 bg-brand text-brand-foreground border-brand" variant="outline" size="sm">⌘ K</Badge>
       </InputWrapper>
     </div>
   );

@@ -42,7 +42,7 @@ export const authOptions: AuthOptions = {
 
         // shopId is not in the response body — it lives as a JWT claim
         const claims = decodeJwtClaims(data.accessToken);
-        const shopId = typeof claims.shopId === 'string' ? claims.shopId : '';
+        const shopId = claims.shopId != null ? String(claims.shopId) : '';
 
         return {
           id: data.id,
@@ -75,7 +75,7 @@ export const authOptions: AuthOptions = {
             accessToken: refreshed.accessToken,
             refreshToken: refreshed.refreshToken,
             accessTokenExpiresAt: Date.now() + 55 * 60 * 1000,
-            shopId: typeof refreshedClaims.shopId === 'string' ? refreshedClaims.shopId : token.shopId,
+            shopId: refreshedClaims.shopId != null ? String(refreshedClaims.shopId) : token.shopId,
             error: undefined,
           };
         } catch {
@@ -112,8 +112,8 @@ export const authOptions: AuthOptions = {
         const refreshed = await refreshAccessToken(token.refreshToken);
         const refreshedClaims = decodeJwtClaims(refreshed.accessToken);
         const refreshedShopId =
-          typeof refreshedClaims.shopId === 'string'
-            ? refreshedClaims.shopId
+          refreshedClaims.shopId != null
+            ? String(refreshedClaims.shopId)
             : token.shopId;
 
         return {

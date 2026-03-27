@@ -152,8 +152,9 @@ export function SidebarPrimary() {
                       : {})}
                     className={cn(
                       'shrink-0 rounded-md size-9',
-                      'data-[state=open]:bg-primary data-[state=open]:text-primary-foreground',
-                      'hover:text-foreground',
+                      'data-[state=open]:bg-brand data-[state=open]:text-brand-foreground',
+                      'hover:bg-brand hover:text-brand-foreground',
+                      'focus-visible:bg-brand focus-visible:text-brand-foreground',
                     )}
                   >
                     <Link href={href}>

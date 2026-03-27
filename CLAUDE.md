@@ -365,6 +365,15 @@ Usage convention:
 - **Screen loader + auth panel**: `logo.svg` / `logo-dark.png`
 - Light/dark pattern: `<img src="logo.svg" className="dark:hidden" />` + `<img src="logo-dark.png" className="hidden dark:block" />`
 
+## Brand Color
+
+The app's primary brand color is **`#B91C1C`** (deep red), defined as `--brand` in `styles/globals.css` (same value in both light and dark mode). Use this for:
+- Branded icon backgrounds (e.g. `bg-[#B91C1C]`)
+- Map markers and coverage circles
+- Action buttons where brand emphasis is needed (e.g. `bg-[#B91C1C] hover:bg-[#B91C1C]/90`)
+
+The foreground on brand color is white (`--brand-foreground`).
+
 ## UI Gotchas
 
 - **`SheetContent` accessibility** — Radix Dialog requires a `DialogTitle`. Always include `<SheetTitle className="sr-only">…</SheetTitle>` inside `SheetHeader` for navigation drawers that have no visible title.
