@@ -86,8 +86,7 @@
     "confirmPassword": "Confirm password",
     "setNewPassword": "Set new password",
     "resetFailed": "Failed to reset password. Please start over.",
-    "secureDashboardAccess": "Secure Dashboard Access",
-    "authDescription": "A robust authentication gateway ensuring secure efficient seller access to the Ordrat Dashboard interface."
+    "heroTitle": "Everything your store needs."
   },
   "unauthorized": {
     "title": "Access denied",

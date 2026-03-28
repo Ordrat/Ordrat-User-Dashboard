@@ -150,7 +150,7 @@ export default function ChangePasswordPage() {
           <Button
             type="submit"
             variant="primary"
-            className="w-full"
+            className="w-full auth-brand-button"
             disabled={isSubmitting}
           >
             {isSubmitting ? t('actions.saving') : t('auth.setNewPassword')}

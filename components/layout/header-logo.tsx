@@ -31,7 +31,7 @@ export function HeaderLogo() {
   }, [pathname]);
 
   return (
-    <div className="flex border-e border-border items-center gap-2 lg:w-(--sidebar-width)">
+    <div className="flex lg:border-e border-border items-center gap-2 grow lg:grow-0 lg:w-(--sidebar-width)">
       {/* Brand */}
       <div className="flex items-center w-full">
         {/* Logo icon — collapsed sidebar */}
@@ -54,7 +54,7 @@ export function HeaderLogo() {
         {isMobile && (
           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" mode="icon" size="sm" className="ms-5.5">
+              <Button variant="ghost" mode="icon" size="sm" className="ms-4">
                 <Menu className="size-4" />
               </Button>
             </SheetTrigger>
@@ -66,7 +66,7 @@ export function HeaderLogo() {
               <SheetHeader className="p-0 space-y-0">
                 <SheetTitle className="sr-only">Navigation</SheetTitle>
               </SheetHeader>
-              <SheetBody className="flex grow p-0">
+              <SheetBody className="flex grow p-0 overflow-hidden">
                 <SidebarPrimary />
                 <SidebarSecondary />
               </SheetBody>
@@ -75,7 +75,7 @@ export function HeaderLogo() {
         )}
 
         {/* Sidebar header — logo + toggle */}
-        <div className="flex w-full grow items-center justify-between px-5 gap-2.5">
+        <div className="hidden lg:flex w-full grow items-center justify-between px-5 gap-2.5">
           <Link href={`/${locale}/dashboard`} className="flex items-center">
             <img
               src={toAbsoluteUrl('/media/app/default-logo.svg')}

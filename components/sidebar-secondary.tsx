@@ -1,7 +1,6 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { SidebarWorkspacesMenu } from "./layout/sidebar-workspaces-menu";
-import { SidebarCommunities } from "./layout/sidebar-communities";
 import { SidebarPrimaryMenu } from "./layout/sidebar-primary-menu";
 import { SidebarResourcesMenu } from "./layout/sidebar-resources-menu";
 import { SidebarSearch } from "./layout/sidebar-search";
@@ -14,10 +13,7 @@ export function SidebarSecondary() {
       <Separator className="my-2.5" />
       <SidebarWorkspacesMenu />
       <Separator className="my-2.5" />
-      <SidebarCommunities />
-      <Separator className="my-2.5" />
       <SidebarResourcesMenu />
-      <Separator className="my-2.5" />
     </ScrollArea>
   );
 }

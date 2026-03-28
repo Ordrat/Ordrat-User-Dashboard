@@ -246,7 +246,7 @@ export default function ShopProfilePage() {
                   <button
                     type="button"
                     onClick={() => coverInputRef.current?.click()}
-                    className="relative h-24 w-56 rounded-xl border-2 border-dashed border-muted-foreground/30 bg-muted hover:border-primary/50 hover:bg-muted/80 transition-colors overflow-hidden flex items-center justify-center group"
+                    className="relative h-24 w-40 sm:w-56 rounded-xl border-2 border-dashed border-muted-foreground/30 bg-muted hover:border-primary/50 hover:bg-muted/80 transition-colors overflow-hidden flex items-center justify-center group"
                   >
                     {coverPreview ? (
                       <>

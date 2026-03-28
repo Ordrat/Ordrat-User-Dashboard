@@ -27,6 +27,15 @@ export const metadata: Metadata = {
     template: '%s | Ordrat',
     default: 'Ordrat Dashboard',
   },
+  openGraph: {
+    title: 'Ordrat Dashboard',
+    images: [{ url: '/media/app/default-logo.svg' }],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Ordrat Dashboard',
+    images: ['/media/app/default-logo.svg'],
+  },
   icons: {
     icon: [
       { url: '/media/app/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
@@ -64,7 +73,7 @@ export default async function RootLayout({
         <meta name="theme-color" content="#4f46e5" />
       </head>
       <body
-        className="antialiased flex h-full text-base text-foreground bg-background font-sans"
+        className="antialiased flex h-full text-base text-foreground bg-background font-sans overflow-x-hidden"
         suppressHydrationWarning
       >
         <ThemeProvider

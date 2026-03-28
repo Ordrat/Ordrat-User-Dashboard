@@ -49,7 +49,7 @@ export function HeaderToolbar() {
   };
 
   return (
-    <nav className="flex items-center gap-2.5">
+    <nav className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
 
       <Button mode="icon" variant="outline">
         <Bell />

@@ -120,7 +120,7 @@ export default function ForgotPasswordPage() {
           <Button
             type="submit"
             variant="primary"
-            className="w-full"
+            className="w-full auth-brand-button"
             disabled={isSubmitting || success}
           >
             {isSubmitting ? t('actions.sending') : t('auth.sendResetCode')}

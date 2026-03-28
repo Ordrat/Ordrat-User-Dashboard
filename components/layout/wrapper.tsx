@@ -3,7 +3,7 @@ import { Sidebar } from './sidebar';
 import { Header } from './header';
 import { Toolbar, ToolbarActions, ToolbarHeading, ToolbarPageHeading } from './toolbar';
 import { Button } from '@/components/ui/button';
-import { Eye, Funnel, MessageSquareCode, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { HeaderBreadcrumbs } from './header-breadcrumbs';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -43,7 +43,7 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
       {!isMobile && <Sidebar />}
 
       <div className={cn(
-        'grow overflow-y-auto pt-(--header-height-mobile) lg:pt-[calc(var(--header-height)+var(--toolbar-height))] lg:ps-(--sidebar-width) lg:in-data-[sidebar-open=false]:ps-(--sidebar-collapsed-width) duration-300',
+        'grow overflow-x-hidden overflow-y-auto pt-(--header-height-mobile) lg:pt-[calc(var(--header-height)+var(--toolbar-height))] lg:ps-(--sidebar-width) lg:in-data-[sidebar-open=false]:ps-(--sidebar-collapsed-width) duration-300',
         enableTransitions ? 'transition-all duration-300' : 'transition-none'
       )}>
         <Toolbar>
@@ -62,14 +62,11 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
             )}
           </ToolbarHeading>
           <ToolbarActions>
-            <Button size="sm" variant="outline"><Funnel />{t('toolbar.sort')}</Button>
-            <Button size="sm" variant="outline"><Eye />{t('toolbar.view')}</Button>
-            <Button size="sm" variant="outline"><MessageSquareCode />{t('toolbar.filter')}</Button>
             <Button size="sm" variant="outline" mode="icon" aria-label={t('toolbar.search')}><Search /></Button>
           </ToolbarActions>
         </Toolbar>
 
-        <main className="grow p-5" role="content">
+        <main className="grow p-5 min-w-0 overflow-x-hidden" role="content">
           {isMobile && <HeaderBreadcrumbs />}
           {children}
         </main>

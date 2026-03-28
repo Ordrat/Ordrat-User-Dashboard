@@ -110,7 +110,7 @@ export default function VerifyOtpPage() {
 
         <Button
           variant="primary"
-          className="w-full"
+          className="w-full auth-brand-button"
           disabled={otp.length !== 6 || loading}
           onClick={handleVerify}
         >
@@ -119,7 +119,7 @@ export default function VerifyOtpPage() {
 
         <Button
           variant="ghost"
-          className="w-full"
+          className="w-full auth-brand-button"
           disabled={resending}
           onClick={handleResend}
         >

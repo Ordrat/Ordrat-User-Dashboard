@@ -708,7 +708,7 @@ export default function BranchesPage() {
 
       {/* Table */}
       {branches.length > 0 && (
-        <div className="rounded-lg border overflow-hidden">
+        <div className="rounded-lg border overflow-x-auto w-full">
           <Table>
             <TableHeader>
               <TableRow>

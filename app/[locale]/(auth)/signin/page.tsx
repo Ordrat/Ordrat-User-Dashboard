@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { Eye, EyeOff, LoaderCircle, TriangleAlert } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import { AuthBrandText } from '@/components/auth/auth-brand-text';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
@@ -87,7 +88,7 @@ export default function SigninPage() {
       >
         <div className="space-y-1.5 pb-3">
           <h1 className="text-2xl font-semibold tracking-tight text-center">
-            {t('auth.signIn')}
+            <AuthBrandText text={t('auth.signIn')} />
           </h1>
         </div>
 
@@ -185,7 +186,7 @@ export default function SigninPage() {
         />
 
         <div className="flex flex-col gap-2.5">
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting} className="w-full auth-brand-button">
             {isSubmitting ? (
               <LoaderCircle className="size-4 animate-spin" />
             ) : null}
