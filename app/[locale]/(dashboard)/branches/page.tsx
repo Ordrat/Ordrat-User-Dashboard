@@ -53,6 +53,7 @@ import {
 } from '@/components/ui/form';
 
 import { usePageMeta } from '@/hooks/use-page-meta';
+import { useOnlineStatus } from '@/hooks/use-online-status';
 import {
   useBranches,
   useCreateBranch,
@@ -556,6 +557,7 @@ function DeleteBranchDialog({
 export default function BranchesPage() {
   const { t } = useTranslation('common');
   usePageMeta(t('branches.title'));
+  const { isOffline } = useOnlineStatus();
 
   const {
     data: branches = [],
@@ -598,7 +600,7 @@ export default function BranchesPage() {
     const hasDelivery = values.enableDeliveryOrders ?? true;
     const isFixed = hasDelivery && (values.isFixedDelivery ?? false);
     return {
-      nameEn: values.nameEn || undefined,
+      nameEn: values.nameEn ?? '',   // always include — API rejects missing field even though swagger marks nullable
       nameAr: values.nameAr ?? '',
       zoneName: values.zoneName,
       phoneNumber: values.phone,
@@ -620,7 +622,7 @@ export default function BranchesPage() {
   async function handleCreate(values: BranchFormValues): Promise<boolean> {
     try {
       await createBranch.mutateAsync(buildInput(values));
-      toast.success(t('branches.createSuccess'));
+      if (!isOffline) toast.success(t('branches.createSuccess'));
       return true;
     } catch (err) {
       console.error('[handleCreate]', err);
@@ -633,7 +635,7 @@ export default function BranchesPage() {
     if (!editBranch) return false;
     try {
       await updateBranch.mutateAsync({ id: editBranch.id, input: buildInput(values) });
-      toast.success(t('branches.updateSuccess'));
+      if (!isOffline) toast.success(t('branches.updateSuccess'));
       return true;
     } catch (err) {
       console.error('[handleEdit]', err);
@@ -646,7 +648,7 @@ export default function BranchesPage() {
     if (!deletingBranch) return;
     try {
       await deleteBranch.mutateAsync(deletingBranch.id);
-      toast.success(t('branches.deleteSuccess'));
+      if (!isOffline) toast.success(t('branches.deleteSuccess'));
       setDeletingBranch(undefined);
     } catch {
       toast.error(t('branches.deleteError'));
@@ -708,7 +710,7 @@ export default function BranchesPage() {
 
       {/* Table */}
       {branches.length > 0 && (
-        <div className="rounded-lg border overflow-x-auto w-full">
+        <div className="w-full overflow-x-auto rounded-lg border bg-card">
           <Table>
             <TableHeader>
               <TableRow>

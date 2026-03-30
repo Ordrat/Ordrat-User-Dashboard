@@ -22,14 +22,23 @@ async function checkConnectivity(): Promise<boolean> {
 }
 
 export function useOnlineStatus(): OnlineStatus {
-  const [isOffline, setIsOffline] = useState(false);
+  // Initialise from navigator.onLine so DevTools "Offline" is reflected instantly
+  // without waiting for the first /api/ping round-trip.
+  const [isOffline, setIsOffline] = useState(
+    typeof navigator !== 'undefined' ? !navigator.onLine : false,
+  );
   const [lastOnlineAt, setLastOnlineAt] = useState<number | null>(null);
-  const isOfflineRef = useRef(false);
+  const isOfflineRef = useRef(typeof navigator !== 'undefined' ? !navigator.onLine : false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const update = async () => {
-      const online = await checkConnectivity();
+      // navigator.onLine is authoritative for hard offline (DevTools, airplane mode).
+      // We still ping /api/ping to catch captive portals where onLine stays true
+      // but the network is actually blocked.
+      const navOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
+      const pingOnline = navOnline ? await checkConnectivity() : false;
+      const online = navOnline && pingOnline;
       isOfflineRef.current = !online;
       setIsOffline(!online);
       onlineManager.setOnline(online);

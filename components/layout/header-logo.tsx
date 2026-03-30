@@ -35,7 +35,7 @@ export function HeaderLogo() {
       {/* Brand */}
       <div className="flex items-center w-full">
         {/* Logo icon — collapsed sidebar */}
-        <div className="flex items-center justify-center shrink-0 border-e border-border w-(--sidebar-collapsed-width) h-(--header-height) bg-muted">
+        <div className="flex items-center justify-center shrink-0 border-e border-border w-(--sidebar-collapsed-width) h-(--header-height) bg-background">
           <Link href={`/${locale}/dashboard`}>
             <img
               src={toAbsoluteUrl('/media/app/logo.svg')}

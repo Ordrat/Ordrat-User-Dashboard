@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { usePageMeta } from '@/hooks/use-page-meta';
+import { useOnlineStatus } from '@/hooks/use-online-status';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -53,6 +54,7 @@ export default function ShopProfilePage() {
 
   const { data: shop, isLoading, isError, refetch } = useShopProfile();
   const updateShop = useUpdateShop();
+  const { isOffline } = useOnlineStatus();
 
   // File state — logo = "Logo" field, cover = "Background" field in the API
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -164,7 +166,7 @@ export default function ShopProfilePage() {
       await updateShop.mutateAsync(formData);
       setLogoFile(null);
       setCoverFile(null);
-      toast.success(t('shop.saveSuccess'));
+      if (!isOffline) toast.success(t('shop.saveSuccess'));
     } catch {
       toast.error(t('shop.saveError'));
     }

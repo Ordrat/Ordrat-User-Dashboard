@@ -26,6 +26,8 @@ import {
 import { useTheme } from "next-themes";
 import { useSession, signOut } from "next-auth/react";
 import { clearSwApiCache } from '@/hooks/use-sw-cache-clear';
+import { clearSessionCache } from '@/lib/session-cache';
+import { clearQueue } from '@/lib/offline-db';
 import { useParams } from "next/navigation";
 import { LanguageSwitcher } from "./language-switcher";
 import { useTranslation } from "react-i18next";
@@ -77,18 +79,18 @@ export function HeaderToolbar() {
             </AvatarIndicator>
           </Avatar>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56" side="bottom" align="end" sideOffset={11}>
+        <DropdownMenuContent className="min-w-56 max-w-72" side="bottom" align="end" sideOffset={11}>
           {/* User Information Section */}
           <div className="flex items-center gap-3 px-3 py-2">
-            <Avatar>
+            <Avatar className="shrink-0">
               <AvatarFallback>{initials}</AvatarFallback>
               <AvatarIndicator className="-end-1.5 -top-1.5">
                 <AvatarStatus variant="online" className="size-2.5" />
               </AvatarIndicator>
             </Avatar>
-            <div className="flex flex-col items-start">
-              <span className="text-sm font-semibold text-foreground">{userName}</span>
-              <span className="text-xs text-muted-foreground">{userEmail}</span>
+            <div className="flex flex-col items-start min-w-0">
+              <span className="text-sm font-semibold text-foreground truncate max-w-full">{userName}</span>
+              <span className="text-xs text-muted-foreground truncate max-w-full">{userEmail}</span>
             </div>
           </div>
 
@@ -106,7 +108,12 @@ export function HeaderToolbar() {
 
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem onClick={() => { clearSwApiCache(); signOut({ callbackUrl: `/${locale}/signin` }); }}>
+          <DropdownMenuItem onClick={async () => {
+            clearSwApiCache();
+            clearSessionCache();
+            await clearQueue();
+            signOut({ callbackUrl: `/${locale}/signin` });
+          }}>
             <LogOut/>
             <span>{t('header.signOut')}</span>
           </DropdownMenuItem>

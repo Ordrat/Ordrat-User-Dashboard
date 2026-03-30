@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { clearSwApiCache } from '@/hooks/use-sw-cache-clear';
+import { clearSessionCache } from '@/lib/session-cache';
 import { cn } from '@/lib/utils';
 import {
   BarChart3,
@@ -132,7 +133,7 @@ export function SidebarPrimary() {
   }, [pathname]);
 
   return (
-    <div className="flex flex-col items-center justify-center shrink-0 px-2.5 py-2.5 gap-5 lg:w-(--sidebar-collapsed-width) border-e border-input bg-muted">
+    <div className="flex flex-col items-center justify-center shrink-0 px-2.5 py-2.5 gap-5 lg:w-(--sidebar-collapsed-width) border-e border-input bg-background">
       {/* Navigation */}
       <ScrollArea className="grow w-full h-[calc(100vh-13rem)] lg:h-[calc(100vh-5.5rem)]">
         <div className="grow gap-1 shrink-0 flex items-center flex-col">
@@ -187,7 +188,7 @@ export function SidebarPrimary() {
           <DropdownMenuTrigger className="cursor-pointer mb-2.5">
             <Avatar className="size-7">
               <AvatarFallback>{initials}</AvatarFallback>
-              <AvatarIndicator className="-end-2 -top-2">
+              <AvatarIndicator className="-inset-e-2 -top-2">
                 <AvatarStatus variant="online" className="size-2.5" />
               </AvatarIndicator>
             </Avatar>
@@ -197,7 +198,7 @@ export function SidebarPrimary() {
             <div className="flex items-center gap-3 px-3 py-2">
               <Avatar>
                 <AvatarFallback>{initials}</AvatarFallback>
-                <AvatarIndicator className="-end-1.5 -top-1.5">
+                <AvatarIndicator className="-inset-e-1.5 -top-1.5">
                   <AvatarStatus variant="online" className="size-2.5" />
                 </AvatarIndicator>
               </Avatar>
@@ -272,7 +273,7 @@ export function SidebarPrimary() {
             <DropdownMenuSeparator />
 
             {/* Action Items */}
-            <DropdownMenuItem onClick={() => { clearSwApiCache(); signOut({ callbackUrl: `/${locale}/signin` }); }}>
+            <DropdownMenuItem onClick={() => { clearSwApiCache(); clearSessionCache(); signOut({ callbackUrl: `/${locale}/signin` }); }}>
               <LogOut/>
               <span>{t('nav.signOut')}</span>
             </DropdownMenuItem>

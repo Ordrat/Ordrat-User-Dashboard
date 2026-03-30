@@ -2,6 +2,7 @@ import { Fragment, ReactNode } from 'react';
 import { MENU_SIDEBAR_MAIN, MENU_SIDEBAR_WORKSPACES, MENU_SIDEBAR_RESOURCES } from '@/config/layout.config';
 import { useMenu } from '@/hooks/use-menu';
 import { MenuItem } from '@/config/types';
+import { useLayout } from './context';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -31,7 +32,7 @@ export interface ToolbarHeadingProps {
 
 function Toolbar({ children }: { children?: ReactNode }) {
   return (
-    <div className="py-2.5 lg:py-0 lg:fixed top-(--header-height) start-[calc(var(--sidebar-width))] lg:in-data-[sidebar-open=false]:start-[calc(var(--sidebar-collapsed-width))] transition-all duration-300 end-0 z-10 px-5 flex flex-wrap items-center justify-between gap-2.5 min-h-(--toolbar-height) bg-background border-b border-border shrink-0">
+    <div className="py-2.5 lg:py-0 lg:fixed top-(--header-height) start-[calc(var(--sidebar-width))] lg:in-data-[sidebar-open=false]:start-[calc(var(--sidebar-collapsed-width))] transition-all duration-300 end-0 z-10 px-5 flex flex-wrap items-center justify-between gap-2.5 min-h-(--toolbar-height) bg-muted border-b border-border shrink-0">
       {children}
     </div>
   );
@@ -46,10 +47,12 @@ function ToolbarBreadcrumbs() {
   const params = useParams();
   const locale = (params?.locale as string) ?? 'en';
   const { t } = useTranslation('common');
+  const { pageTitle } = useLayout();
   const pathWithoutLocale = stripLocale(pathname);
   const { getBreadcrumb } = useMenu(pathWithoutLocale);
   const allMenus = [...MENU_SIDEBAR_MAIN, ...MENU_SIDEBAR_WORKSPACES, ...MENU_SIDEBAR_RESOURCES];
-  const items: MenuItem[] = getBreadcrumb(allMenus);
+  const items: MenuItem[] = getBreadcrumb(allMenus).filter((item) => Boolean(item.title));
+  const shouldShowHome = pathWithoutLocale !== '/dashboard';
 
   if (items.length === 0) {
     return null;
@@ -58,27 +61,36 @@ function ToolbarBreadcrumbs() {
   return (
     <Breadcrumb>
       <BreadcrumbList>
-        <BreadcrumbItem>
-          <BreadcrumbLink asChild>
-            <Link href={`/${locale}/dashboard`}>{t('nav.home')}</Link>
-          </BreadcrumbLink>
-        </BreadcrumbItem>
+        {shouldShowHome && (
+          <>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href={`/${locale}/dashboard`}>{t('nav.dashboard')}</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+          </>
+        )}
         {items.map((item, index) => {
           const isLast = index === items.length - 1;
-          const href = item.path && item.path !== '#'
+          const isNavigable = Boolean(item.path && item.path !== '#');
+          const href = isNavigable
             ? `/${locale}${item.path}`
             : '#';
+          const label = isLast && pageTitle ? pageTitle : t(item.title ?? '');
 
           return (
             <Fragment key={index}>
-              <BreadcrumbSeparator className="text-xs text-muted-foreground">/</BreadcrumbSeparator>
+              {index > 0 && <BreadcrumbSeparator />}
               <BreadcrumbItem>
-                {!isLast ? (
+                {!isLast && isNavigable ? (
                   <BreadcrumbLink asChild>
-                    <Link href={href}>{t(item.title ?? '')}</Link>
+                    <Link href={href}>{label}</Link>
                   </BreadcrumbLink>
+                ) : !isLast ? (
+                  <span className="text-muted-foreground">{label}</span>
                 ) : (
-                  <BreadcrumbPage>{t(item.title ?? '')}</BreadcrumbPage>
+                  <BreadcrumbPage>{label}</BreadcrumbPage>
                 )}
               </BreadcrumbItem>
             </Fragment>

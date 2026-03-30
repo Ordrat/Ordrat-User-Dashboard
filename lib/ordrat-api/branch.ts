@@ -60,6 +60,7 @@ export async function createBranch(input: BranchInput): Promise<void> {
   await ordratFetch<unknown>('/api/Branch/Create', {
     method: 'POST',
     body: JSON.stringify(input),
+    _entityType: 'Branch',
   });
 }
 
@@ -67,6 +68,8 @@ export async function updateBranch(id: string, input: BranchInput): Promise<void
   await ordratFetch<unknown>(`/api/Branch/Update/${id}`, {
     method: 'PUT',
     body: JSON.stringify(input),
+    _entityType: 'Branch',
+    _entityId: id,
   });
 }
 
@@ -101,6 +104,7 @@ export function useCreateBranch() {
   const shopId = session?.user?.shopId ?? '';
 
   return useMutation<void, Error, Omit<BranchInput, 'shopId'>>({
+
     mutationFn: (input) => createBranch({ ...input, shopId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['branches', shopId] });
@@ -115,8 +119,42 @@ export function useUpdateBranch() {
 
   return useMutation<void, Error, { id: string; input: Omit<BranchInput, 'shopId'> }>({
     mutationFn: ({ id, input }) => updateBranch(id, { ...input, shopId }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['branches', shopId] });
+    onSuccess: (_, { id, input }) => {
+      // The API's GET /Branch/GetByShopId endpoint returns only the combined `name` field —
+      // nameEn / nameAr come back as null even after a successful save.
+      // Fix: merge all changed fields directly into the cache so the edit dialog
+      // shows the correct values without needing a round-trip.
+      // We use refetchType:'none' so the background refetch doesn't overwrite nameEn.
+      queryClient.setQueryData<FullBranchResponse[]>(['branches', shopId], (old) =>
+        old?.map((b) =>
+          b.id === id
+            ? {
+                ...b,
+                nameEn: input.nameEn ?? b.nameEn,
+                nameAr: input.nameAr ?? b.nameAr,
+                zoneName: input.zoneName ?? b.zoneName,
+                phoneNumber: input.phoneNumber ?? b.phoneNumber,
+                addressText: input.addressText ?? b.addressText,
+                centerLatitude: input.centerLatitude ?? b.centerLatitude,
+                centerLongitude: input.centerLongitude ?? b.centerLongitude,
+                coverageRadius: input.coverageRadius ?? b.coverageRadius,
+                openAt: input.openAt ?? b.openAt,
+                closedAt: input.closedAt ?? b.closedAt,
+                deliveryTime: input.deliveryTime ?? b.deliveryTime,
+                enableDeliveryOrders: input.enableDeliveryOrders ?? b.enableDeliveryOrders,
+                isFixedDelivery: input.isFixedDelivery ?? b.isFixedDelivery,
+                deliveryCharge: input.deliveryCharge ?? b.deliveryCharge,
+              }
+            : b,
+        ),
+      );
+      // Mark stale but do NOT refetch immediately — a background refetch would
+      // overwrite nameEn/nameAr with null (API limitation).
+      // The cache will refresh on next window focus or component remount.
+      queryClient.invalidateQueries({
+        queryKey: ['branches', shopId],
+        refetchType: 'none',
+      });
     },
   });
 }
@@ -127,6 +165,7 @@ export function useDeleteBranch() {
   const shopId = session?.user?.shopId ?? '';
 
   return useMutation({
+
     mutationFn: (id: string) => deleteBranch(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['branches', shopId] });
