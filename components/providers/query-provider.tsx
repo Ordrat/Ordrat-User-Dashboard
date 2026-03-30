@@ -15,6 +15,13 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
             refetchOnReconnect: true,
             networkMode: 'offlineFirst', // serve SW-cached responses even while offline
           },
+          mutations: {
+            // Never pause mutations waiting for network — ordratFetch handles offline
+            // detection and queuing. Without this, TQ pauses the mutation after
+            // useOnlineStatus marks the app offline, causing infinite spinners.
+            networkMode: 'always',
+            retry: 0, // ordratFetch handles retries; no double-retry here
+          },
         },
       }),
   );

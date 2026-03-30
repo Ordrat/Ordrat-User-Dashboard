@@ -18,10 +18,12 @@ export async function getShopById(shopId: string): Promise<ShopResponse> {
  * Logo and Background (cover) are binary fields in this same request.
  * NOTE: /api/Shop/UploadLogo and /api/Shop/UploadCover do NOT exist in the API.
  */
-export async function updateShop(body: FormData): Promise<void> {
+export async function updateShop(shopId: string, body: FormData): Promise<void> {
   await ordratFetch(ENDPOINTS.Shop.Update.path, {
     method: ENDPOINTS.Shop.Update.method,
     body,
+    _entityType: 'Shop',
+    _entityId: shopId,
   });
 }
 
@@ -115,7 +117,7 @@ export function useUpdateShop() {
   const shopId = session?.user?.shopId ?? '';
 
   return useMutation({
-    mutationFn: (body: FormData) => updateShop(body),
+    mutationFn: (body: FormData) => updateShop(shopId, body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shop', shopId] });
     },

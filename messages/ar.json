@@ -273,6 +273,25 @@
     "session_expired_warning": "قد تكون الجلسة منتهية — أعد الاتصال لمتابعة التعديل",
     "update_available": "يتوفر إصدار جديد",
     "update_reload": "إعادة تحميل",
-    "write_offline_error": "يتطلب هذا الإجراء اتصالاً بالإنترنت. يرجى المحاولة مرة أخرى عند الاتصال."
+    "write_offline_error": "يتطلب هذا الإجراء اتصالاً بالإنترنت. يرجى المحاولة مرة أخرى عند الاتصال.",
+    "queue_saved": "تم تحديد التغيير للمزامنة — سيتم الإرسال عند إعادة الاتصال",
+    "queue_pending": "{{count}} معلّق",
+    "queue_pending_badge": "{{count}} معلّق",
+    "queue_syncing": "جارٍ مزامنة {{count}} تغيير...",
+    "queue_syncing_progress": "{{synced}} من {{total}} تمت مزامنتها",
+    "queue_synced": "تم حفظ جميع التغييرات",
+    "queue_sync_partial": "{{synced}} تمت مزامنتها، {{failed}} فشلت",
+    "queue_failed_badge": "{{count}} فشل",
+    "queue_summary_title": "التغييرات المعلّقة",
+    "queue_retry": "إعادة المحاولة",
+    "queue_retry_all": "إعادة محاولة الكل",
+    "queue_discard": "تجاهل",
+    "queue_empty": "لا توجد تغييرات معلّقة",
+    "cache_pages_btn": "تخزين بلا إنترنت",
+    "cache_pages_btn_loading": "جارٍ التخزين...",
+    "cache_progress": "جارٍ تخزين {{done}}/{{total}} صفحات...",
+    "cache_done": "تم تخزين {{count}} صفحات للاستخدام دون اتصال",
+    "cache_partial": "{{cached}} تم تخزينها، {{failed}} فشلت (تم الوصول لحد التخزين)",
+    "cache_no_pages": "لا توجد صفحات للتخزين"
   }
 }

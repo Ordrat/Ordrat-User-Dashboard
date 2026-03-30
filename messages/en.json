@@ -274,6 +274,25 @@
     "session_expired_warning": "Session may be expired — reconnect to continue editing",
     "update_available": "A new version is available",
     "update_reload": "Reload",
-    "write_offline_error": "This action requires an internet connection. Please try again when you're back online."
+    "write_offline_error": "This action requires an internet connection. Please try again when you're back online.",
+    "queue_saved": "Change queued — will sync when reconnected",
+    "queue_pending": "{{count}} pending",
+    "queue_pending_badge": "{{count}} pending",
+    "queue_syncing": "Syncing {{count}} change...",
+    "queue_syncing_progress": "{{synced}} of {{total}} synced",
+    "queue_synced": "All changes saved",
+    "queue_sync_partial": "{{synced}} synced, {{failed}} failed",
+    "queue_failed_badge": "{{count}} failed",
+    "queue_summary_title": "Pending changes",
+    "queue_retry": "Retry",
+    "queue_retry_all": "Retry all failed",
+    "queue_discard": "Discard",
+    "queue_empty": "No pending changes",
+    "cache_pages_btn": "Cache Offline",
+    "cache_pages_btn_loading": "Caching...",
+    "cache_progress": "Caching {{done}}/{{total}} pages...",
+    "cache_done": "{{count}} pages cached for offline use",
+    "cache_partial": "{{cached}} cached, {{failed}} failed (storage limit reached)",
+    "cache_no_pages": "No pages to cache"
   }
 }

@@ -118,12 +118,22 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           </div>
 
           <div className="auth-hero order-1 bg-background lg:order-2 lg:m-5 lg:rounded-xl lg:border lg:border-border lg:bg-top xxl:bg-center xl:bg-cover bg-no-repeat">
-            <div className="flex flex-col items-center px-6 pb-4 pt-8 text-center sm:px-8 lg:min-h-full lg:justify-center lg:px-16 lg:py-16">
-              <div className="flex max-w-2xl flex-col items-center gap-3">
-                <h3 className="text-2xl font-semibold text-mono sm:text-3xl">
-                  {t('auth.heroTitle')}
-                </h3>
+            <div className="flex flex-col items-start px-6 pb-4 pt-8 sm:px-8 lg:min-h-full lg:justify-start lg:px-10 lg:py-10">
+              <div className="flex items-center gap-3 mb-4">
+                <img
+                  src={toAbsoluteUrl('/media/app/logo.svg')}
+                  className="dark:hidden h-9 w-auto"
+                  alt="Ordrat"
+                />
+                <img
+                  src={toAbsoluteUrl('/media/app/logo-dark.png')}
+                  className="hidden dark:block h-9 w-auto"
+                  alt="Ordrat"
+                />
               </div>
+              <h3 className="text-2xl font-semibold text-foreground sm:text-3xl">
+                {t('auth.heroTitle')}
+              </h3>
             </div>
           </div>
         </div>

@@ -3,7 +3,6 @@ import {
   LayoutDashboard,
   ShoppingCart,
   Package,
-  Users,
   BarChart2,
   Store,
   Settings,
@@ -20,11 +19,6 @@ export const MENU_SIDEBAR_MAIN: MenuConfig = [
         title: 'nav.dashboard',
         path: '/dashboard',
         icon: LayoutDashboard,
-      },
-      {
-        title: 'nav.customers',
-        path: '#',
-        icon: Users,
       },
       {
         title: 'nav.analytics',

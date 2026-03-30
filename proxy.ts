@@ -58,12 +58,24 @@ export default async function proxy(req: NextRequest) {
 
   const isPublic = isPublicPath(pathWithoutLocale);
 
-  const token = await getToken({
-    req,
-    secret: process.env.NEXTAUTH_SECRET,
-  });
+  // Wrap getToken in try/catch: when the device is offline or the network
+  // times out, getToken() can throw instead of returning null. In that case
+  // we let the request pass through to the dashboard layout, which has a
+  // client-side hadRecentSession() grace period. We tag the response so the
+  // layout knows this was a network failure, not a successful auth check.
+  let token;
+  let authNetworkError = false;
+  try {
+    token = await getToken({
+      req,
+      secret: process.env.NEXTAUTH_SECRET,
+    });
+  } catch {
+    authNetworkError = true;
+    token = null;
+  }
 
-  const isAuthenticated = !!token && token.error !== 'RefreshAccessTokenError';
+  const isAuthenticated = !authNetworkError && !!token && token.error !== 'RefreshAccessTokenError';
 
   // Authenticated user on a public route → redirect to dashboard home
   if (isPublic && isAuthenticated) {
@@ -71,14 +83,17 @@ export default async function proxy(req: NextRequest) {
   }
 
   // Unauthenticated user on a protected route → redirect to sign-in
-  if (!isPublic && !isAuthenticated) {
+  // Exception: if getToken() threw a network error, let the request through.
+  // The dashboard layout's hadRecentSession() check will handle the offline case.
+  if (!isPublic && !isAuthenticated && !authNetworkError) {
     const signInUrl = new URL(`/${locale}/signin`, req.nextUrl);
     signInUrl.searchParams.set('callbackUrl', pathname);
     return NextResponse.redirect(signInUrl);
   }
 
   // Authenticated user — check role-based access
-  if (!isPublic && isAuthenticated && token) {
+  // Skip role check if we had a network error (token is null, can't check roles)
+  if (!isPublic && isAuthenticated && token && !authNetworkError) {
     const userRoles: string[] = Array.isArray(token.roles) ? token.roles : [];
     if (!userHasRouteAccess(userRoles, pathWithoutLocale)) {
       return NextResponse.redirect(

@@ -3,7 +3,7 @@ import { Sidebar } from './sidebar';
 import { Header } from './header';
 import { Toolbar, ToolbarActions, ToolbarHeading, ToolbarPageHeading } from './toolbar';
 import { Button } from '@/components/ui/button';
-import { Search } from 'lucide-react';
+import { HardDriveDownload } from 'lucide-react';
 import { HeaderBreadcrumbs } from './header-breadcrumbs';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { usePathname } from 'next/navigation';
 import { useMenu } from '@/hooks/use-menu';
 import { MENU_SIDEBAR_MAIN, MENU_SIDEBAR_WORKSPACES, MENU_SIDEBAR_RESOURCES } from '@/config/layout.config';
+import { usePagePrecache } from '@/hooks/use-page-precache';
 
 const LOCALES = ['en', 'ar'];
 
@@ -31,6 +32,7 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
   const { getCurrentItem } = useMenu(pathWithoutLocale);
   const allMenus = [...MENU_SIDEBAR_MAIN, ...MENU_SIDEBAR_WORKSPACES, ...MENU_SIDEBAR_RESOURCES];
   const currentItem = getCurrentItem(allMenus);
+  const { cacheAllPages, isCaching, cachedCount, totalPages, failedCount } = usePagePrecache();
 
   useEffect(() => {
     const id = requestAnimationFrame(() => setEnableTransitions(true));
@@ -62,7 +64,20 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
             )}
           </ToolbarHeading>
           <ToolbarActions>
-            <Button size="sm" variant="outline" mode="icon" aria-label={t('toolbar.search')}><Search /></Button>
+            <Button
+              size="sm"
+              variant="primary"
+              className="bg-yellow-600 hover:bg-yellow-700 text-white gap-1.5"
+              onClick={cacheAllPages}
+              disabled={isCaching}
+            >
+              <HardDriveDownload className={cn('size-3.5', isCaching && 'animate-pulse')} />
+              {isCaching
+                ? t('pwa.cache_progress', { done: cachedCount, total: totalPages })
+                : failedCount > 0
+                  ? t('pwa.cache_partial', { cached: cachedCount, failed: failedCount })
+                  : t('pwa.cache_pages_btn')}
+            </Button>
           </ToolbarActions>
         </Toolbar>
 

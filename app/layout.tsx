@@ -11,6 +11,7 @@ import { QueryProvider } from '@/components/providers/query-provider';
 import { OfflineIndicator } from '@/components/pwa/offline-indicator';
 import { SWUpdatePrompt } from '@/components/pwa/sw-update-prompt';
 import { SessionWarning } from '@/components/pwa/session-warning';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 import '@/styles/globals.css';
 
@@ -68,12 +69,12 @@ export default async function RootLayout({
         )}
         {/* PWA meta tags */}
         <link rel="apple-touch-icon" href="/media/app/apple-touch-icon.png" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="theme-color" content="#4f46e5" />
       </head>
       <body
-        className="antialiased flex h-full text-base text-foreground bg-background font-sans overflow-x-hidden"
+        className="antialiased flex h-full text-base text-foreground bg-muted font-sans overflow-x-hidden"
         suppressHydrationWarning
       >
         <ThemeProvider
@@ -91,6 +92,7 @@ export default async function RootLayout({
                   <OfflineIndicator />
                   <SessionWarning />
                   <SWUpdatePrompt />
+                  <ConfirmDialog />
                   <Suspense>{children}</Suspense>
                   <Toaster />
                 </TooltipProvider>

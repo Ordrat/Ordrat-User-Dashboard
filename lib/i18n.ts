@@ -25,6 +25,13 @@ function getInitialLanguage(): AppLanguage {
 const savedLanguage: AppLanguage = getInitialLanguage();
 
 if (!i18n.isInitialized) {
+  // Suppress i18next's promotional console.log for Locize
+  const _origLog = console.log;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  console.log = (...args: any[]) => {
+    if (typeof args[0] === 'string' && args[0].toLowerCase().includes('locize')) return;
+    _origLog.apply(console, args);
+  };
   i18n.use(initReactI18next).init({
     resources,
     lng: savedLanguage,
@@ -32,6 +39,8 @@ if (!i18n.isInitialized) {
     defaultNS: 'common',
     interpolation: { escapeValue: false },
   });
+  // Restore after a tick to catch async log
+  setTimeout(() => { console.log = _origLog; }, 0);
 } else {
   i18n.addResourceBundle('en', 'common', en, true, true);
   i18n.addResourceBundle('ar', 'common', ar, true, true);
