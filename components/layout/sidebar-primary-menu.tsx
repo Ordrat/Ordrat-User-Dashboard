@@ -34,7 +34,7 @@ export function SidebarPrimaryMenu() {
       className="space-y-7.5 px-2.5"
       classNames={{
         label: 'text-xs font-normal text-muted-foreground mb-2',
-        item: 'h-8.5 px-2.5 text-sm font-normal text-foreground hover:bg-muted hover:text-foreground focus-visible:bg-muted focus-visible:text-foreground data-[selected=true]:bg-brand data-[selected=true]:text-brand-foreground [&[data-selected=true]_svg]:opacity-100',
+        item: 'h-8.5 px-2.5 text-sm font-normal text-foreground hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-foreground focus-visible:bg-zinc-200 dark:focus-visible:bg-zinc-800 focus-visible:text-foreground data-[selected=true]:bg-brand data-[selected=true]:text-brand-foreground [&[data-selected=true]_svg]:opacity-100',
         group: 'space-y-1',
       }}
     >
