@@ -174,3 +174,164 @@ export const ThemeListSchema = z.object({
 }).passthrough();
 
 export type ThemeResponse = z.infer<typeof ThemeSchema>;
+
+// ─── PaymentGateway ───────────────────────────────────────────────────────────
+
+export const PaymentMethod = {
+  CashOnDelivery: 0,
+  CreditCard: 1,
+  DebitCard: 2,
+  BankTransfer: 3,
+  DigitalWallet: 4,
+  ApplePay: 5,
+  GooglePay: 6,
+  StcPay: 7,
+  Mada: 8,
+  Other: 9,
+} as const;
+
+export type PaymentMethodType = typeof PaymentMethod[keyof typeof PaymentMethod];
+
+export const PaymentGatewaySchema = z
+  .object({
+    id: z.string(),
+    shopId: z.string().optional(),
+    paymentGatewayId: z.string().nullable().optional(),
+    isEnabled: z.boolean(),
+    priority: z.number(),
+    paymentMethod: z.number(),
+    gatewayNameAr: z.string().nullable().optional(),
+    gatewayNameEn: z.string().nullable().optional(),
+    gatewayDescriptionAr: z.string().nullable().optional(),
+    gatewayDescriptionEn: z.string().nullable().optional(),
+  })
+  .passthrough();
+
+export type PaymentGatewayResponse = z.infer<typeof PaymentGatewaySchema>;
+
+// ─── Table ────────────────────────────────────────────────────────────────────
+
+export const TableStatus = {
+  Available: 0,
+  Occupied: 1,
+  Reserved: 2,
+} as const;
+
+export type TableStatusType = typeof TableStatus[keyof typeof TableStatus];
+
+export const TableLocation = {
+  Indoor: 0,
+  Outdoor: 1,
+  Rooftop: 2,
+} as const;
+
+export type TableLocationType = typeof TableLocation[keyof typeof TableLocation];
+
+export const TableSchema = z
+  .object({
+    id: z.string(),
+    branchId: z.string().optional(),
+    tableNumber: z.number(),
+    capacity: z.number(),
+    tableStatus: z.number(),
+    location: z.number(),
+    descriptionEn: z.string().nullable().optional(),
+    descriptionAr: z.string().nullable().optional(),
+  })
+  .passthrough();
+
+export type TableResponse = z.infer<typeof TableSchema>;
+
+// ─── ContactInfo ──────────────────────────────────────────────────────────────
+
+export const ContactInfoSchema = z
+  .object({
+    id: z.union([z.string(), z.number()]).transform(String),
+    shopId: z.union([z.string(), z.number()]).transform(String).optional(),
+    whatsAppNumber: z.string().nullable().optional(),
+    facebookLink: z.string().nullable().optional(),
+    xLink: z.string().nullable().optional(),
+    instagramLink: z.string().nullable().optional(),
+  })
+  .passthrough();
+
+export type ContactInfoResponse = z.infer<typeof ContactInfoSchema>;
+
+// ─── SourceChannel ────────────────────────────────────────────────────────────
+
+export const SourceChannel = {
+  0: 'Dashboard',
+  1: 'App',
+  2: 'POS',
+} as const;
+
+// ─── LogEntry ─────────────────────────────────────────────────────────────────
+
+export const LogsActionType = {
+  0: 'Created',
+  1: 'Updated',
+  2: 'Deleted',
+  3: 'Activated',
+  4: 'Deactivated',
+  5: 'StatusChanged',
+  6: 'Login',
+  7: 'Logout',
+  8: 'PasswordChanged',
+  9: 'OrderPlaced',
+  10: 'OrderCancelled',
+  11: 'OrderCompleted',
+  12: 'OrderRefunded',
+  13: 'PaymentReceived',
+  14: 'PaymentFailed',
+  15: 'ShippingUpdated',
+  16: 'ProductAdded',
+  17: 'ProductRemoved',
+  18: 'ProductUpdated',
+  19: 'CategoryAdded',
+  20: 'CategoryRemoved',
+  21: 'BranchAdded',
+  22: 'BranchRemoved',
+  23: 'BranchUpdated',
+  24: 'SettingsUpdated',
+  25: 'CouponCreated',
+  26: 'CouponDeleted',
+  27: 'TableAdded',
+  28: 'TableUpdated',
+  29: 'TableStatusChanged',
+  30: 'ContactInfoUpdated',
+  31: 'WorkingHoursUpdated',
+  32: 'ThemeChanged',
+  33: 'SubdomainChanged',
+  34: 'LogoUpdated',
+  35: 'CoverUpdated',
+  36: 'StaffAdded',
+  37: 'StaffRemoved',
+  38: 'RoleChanged',
+  39: 'ProfileUpdated',
+  40: 'InvoiceGenerated',
+  41: 'ReservationCreated',
+  42: 'ReservationCancelled',
+  43: 'ReservationConfirmed',
+  44: 'MenuUpdated',
+  45: 'IntegrationEnabled',
+  46: 'IntegrationDisabled',
+} as const;
+
+export const LogEntrySchema = z
+  .object({
+    id: z.string().nullable().optional(),
+    createdAt: z.string().nullable().optional(),
+    timestamp: z.string().nullable().optional(),
+    action: z.number().nullable().optional(),
+    entity: z.string().nullable().optional(),
+    entityId: z.string().nullable().optional(),
+    description: z.string().nullable().optional(),
+    message: z.string().nullable().optional(),
+    shopName: z.string().nullable().optional(),
+    branchName: z.string().nullable().optional(),
+    source: z.union([z.number(), z.string()]).nullable().optional(),
+    userName: z.string().nullable().optional(),
+  })
+  .passthrough();
+
+export type LogEntryResponse = z.infer<typeof LogEntrySchema>;

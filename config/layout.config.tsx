@@ -9,7 +9,12 @@ import {
   Bell,
   Headphones,
   FileText,
-  GitBranch,
+  Building2,
+  CreditCard,
+  UtensilsCrossed,
+  Phone,
+  ClipboardList,
+  QrCode,
 } from "lucide-react";
 
 export const MENU_SIDEBAR_MAIN: MenuConfig = [
@@ -59,18 +64,48 @@ export const MENU_SIDEBAR_RESOURCES: MenuConfig = [
 
 export const MENU_SIDEBAR_WORKSPACES: MenuConfig = [
   {
-    title: 'nav.store',
+    title: 'nav.storeSettings',
     children: [
       {
-        title: 'nav.myShop',
-        path: '/shop',
+        title: 'nav.basicData',
+        path: '/store-settings/basic-data',
         icon: Store,
       },
       {
         title: 'nav.branches',
-        path: '/branches',
-        icon: GitBranch,
+        path: '/store-settings/branches',
+        icon: Building2,
       },
+      {
+        title: 'nav.paymentGateways',
+        path: '/store-settings/payment-gateways',
+        icon: CreditCard,
+      },
+      {
+        title: 'nav.tables',
+        path: '/store-settings/tables',
+        icon: UtensilsCrossed,
+      },
+      {
+        title: 'nav.contactInfo',
+        path: '/store-settings/contact-info',
+        icon: Phone,
+      },
+      {
+        title: 'nav.logs',
+        path: '/store-settings/logs',
+        icon: ClipboardList,
+      },
+      {
+        title: 'nav.qrCode',
+        path: '/store-settings/qr-code',
+        icon: QrCode,
+      },
+    ],
+  },
+  {
+    title: 'nav.store',
+    children: [
       {
         title: 'nav.orders',
         path: '#',
@@ -82,7 +117,7 @@ export const MENU_SIDEBAR_WORKSPACES: MenuConfig = [
         icon: Package,
       },
     ],
-  }
+  },
 ];
 
 export const MENU_TOOLBAR: MenuConfig = [

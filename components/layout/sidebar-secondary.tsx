@@ -1,6 +1,6 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { SidebarWorkspacesMenu } from "./sidebar-workspaces-menu";
+import { SidebarWorkspacesMenu } from "./sidebar-store-menu";
 import { SidebarPrimaryMenu } from "./sidebar-primary-menu";
 import { SidebarResourcesMenu } from "./sidebar-resources-menu";
 import { SidebarSearch } from "./sidebar-search";

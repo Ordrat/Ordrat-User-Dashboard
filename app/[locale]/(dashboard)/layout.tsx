@@ -12,7 +12,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const params = useParams();
   const locale = (params?.locale as string) ?? 'en';
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(status === 'loading');
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -32,10 +32,17 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
     if (status === 'authenticated') {
       markAuthenticated(session?.user?.shopId ?? null);
-      const timer = setTimeout(() => setIsLoading(false), 500);
-      return () => clearTimeout(timer);
+      setIsLoading(false);
+      return;
     }
   }, [status, session, router, locale]);
+
+  // Keep authenticated users on the page during locale swaps while NextAuth refreshes status.
+  useEffect(() => {
+    if (status === 'loading' && hadRecentSession()) {
+      setIsLoading(false);
+    }
+  }, [status]);
 
   // Safety valve: if the session is stuck on 'loading' (fetch never rejects,
   // e.g. captive portal or DevTools Offline blocking localhost), unblock after
@@ -48,7 +55,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     return () => clearTimeout(timer);
   }, [status]);
 
-  if (status === 'loading' || isLoading) return <ScreenLoader />;
+  const shouldShowLoader = (status === 'loading' && !hadRecentSession()) || isLoading;
+  if (shouldShowLoader) return <ScreenLoader />;
 
   return <Layout14>{children}</Layout14>;
 }

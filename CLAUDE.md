@@ -33,6 +33,19 @@ Frontend-only — all data via `.NET API` at `https://api.ordrat.com`. No Prisma
 
 **`suppressHydrationWarning`**: Only on elements mutated by `useEffect` before hydration. Never to suppress bugs.
 
+**Mobile / no horizontal scroll**: Every page must be free of horizontal overflow on all screen sizes. Rules:
+- Always wrap `<Table>` in `<div className="overflow-x-auto">` — never place `<Table>` directly inside a `<Card>` or page div without this wrapper.
+- Page root divs use `min-w-0` to prevent flex/grid children from escaping their container.
+- Fixed-size embeds (QR canvas, maps, charts) use `[&_canvas]:max-w-full [&_canvas]:h-auto [&_svg]:max-w-full [&_svg]:h-auto` on their wrapper, plus `overflow-hidden` on the container.
+- Never use `min-w-[Npx]` on elements that sit at page level — only on internal UI components (inputs, badges).
+- Filter bars use `flex flex-wrap` so they reflow on small screens instead of overflowing.
+
+**Page layout**: Every dashboard section has a `layout.tsx` that applies `mx-auto w-full max-w-5xl` — do NOT add `max-w-*` or `mx-auto` inside individual pages. Applies to all sections: `store-settings/`, `dashboard/`, and any new sections added in the future.
+
+**Store Settings routing**: Pages live under `app/[locale]/(dashboard)/store-settings/<page>/`. Sidebar paths use `/store-settings/<page>`.
+
+**PWA precache (all pages)**: Every page added to the sidebar menu MUST have a corresponding entry in `ROUTE_API_ENDPOINTS` in `hooks/use-page-precache.ts`. List all API endpoints the page fetches. Use `() => []` for filter-driven or no-data pages. This applies to ALL dashboard sections, not just store-settings.
+
 ---
 
 ## State — Decision Tree
@@ -149,6 +162,10 @@ After implement: `npx tsc --noEmit` → validate → merge to main.
 - Empty `shopId` after login → redirect to `https://ordrat.com/seller-setup?sellerId=<id>`
 
 ## Recent Changes
+- 005-store-settings-extensions: Added TypeScript 5.x + Next.js 16.x (App Router), React 19, TanStack Query 5.x, React Hook Form + Zod, `qr-code-styling` (new)
 - 004-pwa-offline-resilience: IndexedDB offline queue, SW cache clear on sign-out, mount-time queue flush, `_entityType`/`_entityId` deduplication
 - 003-pwa-offline-caching: Serwist + @serwist/next, StaleWhileRevalidate for API GETs
-- 002-shop-branch-management: TanStack Query, React Hook Form + Zod, ReUI/Metronic 9
+
+## Active Technologies
+- TypeScript 5.x + Next.js 16.x (App Router), React 19, TanStack Query 5.x, React Hook Form + Zod, `qr-code-styling` (new) (005-store-settings-extensions)
+- N/A — frontend-only, all data via .NET API at `api.ordrat.com` (005-store-settings-extensions)

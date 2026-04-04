@@ -6,14 +6,14 @@
 /* Font utilities */
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-arabic: var(--font-tajawal), ui-sans-serif, system-ui, sans-serif;
+  --font-arabic: var(--font-almarai), ui-sans-serif, system-ui, sans-serif;
 }
 
-/* Apply Tajawal when Arabic is active */
+/* Apply Almarai when Arabic is active */
 html.font-arabic,
 html.font-arabic body,
 html.font-arabic * {
-  font-family: var(--font-tajawal), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-almarai), ui-sans-serif, system-ui, sans-serif;
 }
 
 /** Dark Mode Variant **/

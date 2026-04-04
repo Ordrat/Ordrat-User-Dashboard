@@ -11,19 +11,32 @@ import {
 } from '@/config/layout.config';
 import type { MenuConfig } from '@/config/types';
 import { ordratFetch } from '@/lib/api-client';
-import { Shop, Branch, Currency, Theme } from '@/lib/ordrat-api/endpoints';
+import {
+  Shop,
+  Branch,
+  Currency,
+  Theme,
+  ShopPaymentGateway,
+  ShopContactInfo,
+} from '@/lib/ordrat-api/endpoints';
 import { getSessionShopId } from '@/lib/session-cache';
 
 // Map of dashboard route → API path(s) to pre-fetch for offline data caching.
 // The SW's StaleWhileRevalidate rule for api.ordrat.com caches these responses.
 // Add new entries here whenever a page gains a new API dependency.
 const ROUTE_API_ENDPOINTS: Record<string, (shopId: string) => string[]> = {
-  '/shop': (shopId) => [
+  '/dashboard': () => [],  // skeleton placeholder — no static precache needed yet
+  '/store-settings/basic-data': (shopId) => [
     Shop.GetById(shopId),
     Currency.GetAll.path,   // currency dropdown
     Theme.GetAll.path,      // theme dropdown
   ],
-  '/branches': (shopId) => [Branch.GetByShopId(shopId)],
+  '/store-settings/branches': (shopId) => [Branch.GetByShopId(shopId)],
+  '/store-settings/payment-gateways': (shopId) => [ShopPaymentGateway.GetByShopId(shopId)],
+  '/store-settings/tables': (shopId) => [Branch.GetByShopId(shopId)],  // branches needed for dropdown
+  '/store-settings/contact-info': (shopId) => [ShopContactInfo.GetByShopId(shopId)],
+  '/store-settings/logs': () => [],  // filter-driven — no static precache
+  '/store-settings/qr-code': (shopId) => [Shop.GetById(shopId)],  // needs subdomain
 };
 
 export interface PrecacheState {

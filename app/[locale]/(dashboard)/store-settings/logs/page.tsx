@@ -155,6 +155,7 @@ export default function LogsPage() {
           ) : filtered.length === 0 ? (
             <div className="p-10 text-center text-muted-foreground">{t('logs.emptyState')}</div>
           ) : (
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -193,6 +194,7 @@ export default function LogsPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>

@@ -657,7 +657,7 @@ export default function BranchesPage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto w-full max-w-5xl space-y-4">
+      <div className="space-y-4">
         <Skeleton className="h-10 w-full" />
         <Skeleton className="h-64 w-full rounded-lg" />
       </div>
@@ -666,7 +666,7 @@ export default function BranchesPage() {
 
   if (isError) {
     return (
-      <div className="mx-auto w-full max-w-5xl">
+      <div>
         <Alert variant="destructive" appearance="light">
           <AlertIcon>
             <TriangleAlert />
@@ -679,7 +679,7 @@ export default function BranchesPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-4">
+    <div className="min-w-0 space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />

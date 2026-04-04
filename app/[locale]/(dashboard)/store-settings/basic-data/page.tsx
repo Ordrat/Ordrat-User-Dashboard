@@ -66,7 +66,7 @@ export default function ShopProfilePage() {
   const [subdomainStatus, setSubdomainStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
   const originalSubdomain = (shop?.subdomainName ?? '').replace(/\.ordrat\.com$/i, '');
 
-  usePageMeta(t('shop.profile'), logoPreview);
+  usePageMeta(t('nav.basicData'), logoPreview);
 
   const logoInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
@@ -174,7 +174,7 @@ export default function ShopProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto w-full max-w-5xl space-y-4">
+      <div className="space-y-4">
         <Skeleton className="h-48 w-full rounded-lg" />
         <Skeleton className="h-64 w-full rounded-lg" />
         <Skeleton className="h-48 w-full rounded-lg" />
@@ -184,7 +184,7 @@ export default function ShopProfilePage() {
 
   if (isError) {
     return (
-      <div className="mx-auto w-full max-w-5xl">
+      <div>
         <Alert variant="destructive" appearance="light">
           <AlertIcon><TriangleAlert /></AlertIcon>
           <AlertTitle>{t('shop.loadError')}</AlertTitle>
@@ -200,7 +200,7 @@ export default function ShopProfilePage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-6">
+    <div className="space-y-6">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
 
@@ -365,8 +365,8 @@ export default function ShopProfilePage() {
                   <FormItem>
                     <FormLabel>{t('shop.subdomain')}</FormLabel>
                     <FormControl>
-                      <div className="flex items-center rounded-md border focus-within:ring-1 focus-within:ring-ring overflow-hidden">
-                        <Input {...field} className="border-0 shadow-none focus-visible:ring-0 rounded-none" />
+                      <div className="flex items-center rounded-md border focus-within:ring-1 focus-within:ring-ring overflow-hidden" dir="ltr">
+                        <Input {...field} className="border-0 shadow-none focus-visible:ring-0 rounded-none" dir="ltr" />
                         {subdomainStatus === 'checking' && (
                           <span className="px-3 flex items-center">
                             <LoaderCircle className="size-4 animate-spin text-muted-foreground" />

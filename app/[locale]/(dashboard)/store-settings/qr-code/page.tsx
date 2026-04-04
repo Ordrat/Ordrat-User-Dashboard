@@ -1,15 +1,12 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import {
   ArrowUpRight,
-  Check,
   Copy,
-  Download,
   Eraser,
   Palette,
   QrCode,
@@ -244,56 +241,35 @@ export default function QRCodePage() {
   return (
     <div className="space-y-6 p-6">
       <section className="relative overflow-hidden rounded-[28px] border border-border/70 bg-card p-6 shadow-sm shadow-black/5 md:p-7">
-        <Badge className="absolute top-6 inset-e-6 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/12 px-3 py-1 text-[0.72rem] font-medium text-emerald-800 shadow-xs shadow-emerald-900/5 hover:bg-emerald-500/12">
+        <Badge className="absolute top-6 inset-e-6 inline-flex items-center gap-2 rounded-full border border-foreground/10 bg-background px-3 py-1 text-[0.72rem] font-medium text-foreground shadow-xs shadow-black/10 hover:bg-background">
           <span className="relative flex size-2.5">
             <span className="absolute inset-0 rounded-full bg-emerald-500/70 animate-ping" />
             <span className="relative rounded-full bg-emerald-600 size-2.5" />
           </span>
           {t('qrCode.metricReady')}
         </Badge>
-        <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
-          <div className="space-y-5">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge className="rounded-full bg-brand px-3 py-1 text-[0.7rem] text-brand-foreground uppercase tracking-[0.2em] hover:bg-brand">
-                {t('qrCode.studioEyebrow')}
-              </Badge>
-              <Badge variant="outline" className="rounded-full px-3 py-1 text-xs">
-                {t('qrCode.liveDomain')}
-              </Badge>
+        <div className="space-y-5">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
+            {t('qrCode.heroTitle')}
+          </h1>
+          <p className="max-w-2xl text-sm leading-6 text-muted-foreground md:text-[0.95rem]">
+            {t('qrCode.heroDescription')}
+          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/80 px-3 py-2 shadow-xs shadow-black/5 backdrop-blur">
+              <QrCode className="size-4 text-brand" />
+              <span className="font-mono text-xs text-foreground md:text-sm">{shopUrl}</span>
             </div>
-            <div className="space-y-2">
-              <h1 className="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
-                {t('qrCode.heroTitle')}
-              </h1>
-              <p className="max-w-2xl text-sm leading-6 text-muted-foreground md:text-[0.95rem]">
-                {t('qrCode.heroDescription')}
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/80 px-3 py-2 shadow-xs shadow-black/5 backdrop-blur">
-                <QrCode className="size-4 text-brand" />
-                <span className="font-mono text-xs text-foreground md:text-sm">{shopUrl}</span>
-              </div>
-              <Button variant="outline" size="sm" onClick={copyDomain}>
-                <Copy className="size-4" />
-                {t('qrCode.copyLink')}
-              </Button>
-              <Button asChild size="sm" className="bg-brand text-brand-foreground hover:bg-brand/90">
-                <a href={shopUrl ?? undefined} target="_blank" rel="noreferrer">
-                  <ArrowUpRight className="size-4" />
-                  {t('qrCode.openStore')}
-                </a>
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2 xl:w-92">
-            <MetricCard
-              label={t('qrCode.metricStyle')}
-              value={t(`qrCode.style${selectedStyle.charAt(0).toUpperCase() + selectedStyle.slice(1)}` as never)}
-              variant="brand"
-            />
-            <MetricCard label={t('qrCode.metricFormat')} value="PNG / SVG / PDF" variant="navy" />
+            <Button variant="outline" size="sm" onClick={copyDomain}>
+              <Copy className="size-4" />
+              {t('qrCode.copyLink')}
+            </Button>
+            <Button asChild size="sm" className="bg-brand text-brand-foreground hover:bg-brand/90">
+              <a href={shopUrl ?? undefined} target="_blank" rel="noreferrer">
+                <ArrowUpRight className="size-4" />
+                {t('qrCode.openStore')}
+              </a>
+            </Button>
           </div>
         </div>
       </section>
@@ -386,29 +362,22 @@ export default function QRCodePage() {
                         type="button"
                         onClick={() => applyDesign({ ...currentDesign, selectedStyle: style })}
                         className={cn(
-                          'rounded-2xl border p-5 text-left transition-all focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand/20 focus-visible:ring-offset-2',
+                          'rounded-2xl border p-4 text-left transition-all focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand/20 focus-visible:ring-offset-2',
                           selectedStyle === style
                             ? 'border-brand/20 bg-muted shadow-sm shadow-brand/8'
                             : 'border-border/70 bg-muted/35 hover:border-brand/10 hover:bg-accent',
                         )}
                       >
-                        <div className="mb-4 flex items-start justify-between gap-3">
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              'h-auto max-w-34 whitespace-normal px-2.5 py-1.5 text-left leading-4',
-                              selectedStyle === style
-                                ? 'border-brand/25 bg-brand text-brand-foreground'
-                                : 'border-border/70',
-                            )}
-                          >
-                            {t(`qrCode.style${style.charAt(0).toUpperCase() + style.slice(1)}` as never)}
-                          </Badge>
-                          {selectedStyle === style ? <Check className="size-4 text-brand" /> : null}
-                        </div>
-                        <p className={cn('text-sm leading-6', selectedStyle === style ? 'text-foreground' : 'text-muted-foreground')}>
-                          {t(`qrCode.style${style.charAt(0).toUpperCase() + style.slice(1)}Desc` as never)}
-                        </p>
+                        <span
+                          className={cn(
+                            'text-sm font-medium leading-4',
+                            selectedStyle === style
+                              ? 'text-brand'
+                              : 'text-foreground',
+                          )}
+                        >
+                          {t(`qrCode.style${style.charAt(0).toUpperCase() + style.slice(1)}` as never)}
+                        </span>
                       </button>
                     ))}
                   </div>
@@ -554,25 +523,22 @@ export default function QRCodePage() {
                   </div>
                 </div>
 
-                <div className="flex min-h-96 items-center justify-center rounded-4xl border border-border/60 bg-muted/35 p-8 shadow-inner shadow-black/5 md:p-10">
-                  <div ref={qrRef} />
+                <div className="flex items-center justify-center overflow-hidden rounded-4xl border border-border/60 bg-muted/35 p-6 shadow-inner shadow-black/5 sm:p-8 md:p-10">
+                  <div ref={qrRef} className="[&_canvas]:h-auto [&_canvas]:max-w-full [&_svg]:h-auto [&_svg]:max-w-full" />
                 </div>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-3">
                 <ExportTypeButton
                   label="PNG"
-                  iconSrc="/media/file-types/image.svg"
                   onClick={downloadPng}
                 />
                 <ExportTypeButton
                   label="SVG"
-                  iconSrc="/media/file-types/svg.svg"
                   onClick={downloadSvg}
                 />
                 <ExportTypeButton
                   label="PDF"
-                  iconSrc="/media/file-types/pdf.svg"
                   disabled
                 />
               </div>
@@ -584,62 +550,12 @@ export default function QRCodePage() {
   );
 }
 
-function MetricCard({
-  label,
-  value,
-  variant = 'default',
-}: {
-  label: string;
-  value: string;
-  variant?: 'default' | 'navy' | 'brand';
-}) {
-  return (
-    <div
-      className={cn(
-        'flex min-h-24 flex-col justify-between rounded-2xl border p-4 shadow-xs shadow-black/5',
-        variant === 'navy'
-          ? 'border-slate-900 bg-slate-900 text-white'
-          : variant === 'brand'
-            ? 'border-brand/25 bg-brand text-brand-foreground'
-            : 'border-border/70 bg-background/80',
-      )}
-    >
-      <p
-        className={cn(
-          'text-[0.7rem] uppercase tracking-[0.18em]',
-          variant === 'navy'
-            ? 'text-white/65'
-            : variant === 'brand'
-              ? 'text-brand-foreground/70'
-              : 'text-muted-foreground',
-        )}
-      >
-        {label}
-      </p>
-      <p
-        className={cn(
-          'mt-3 text-sm leading-5 font-semibold whitespace-nowrap',
-          variant === 'navy'
-            ? 'text-white'
-            : variant === 'brand'
-              ? 'text-brand-foreground'
-              : 'text-foreground',
-        )}
-      >
-        {value}
-      </p>
-    </div>
-  );
-}
-
 function ExportTypeButton({
   label,
-  iconSrc,
   onClick,
   disabled = false,
 }: {
   label: string;
-  iconSrc: string;
   onClick?: () => void;
   disabled?: boolean;
 }) {
@@ -649,15 +565,9 @@ function ExportTypeButton({
       variant="outline"
       onClick={onClick}
       disabled={disabled}
-      className="h-11 justify-between rounded-2xl bg-card px-3 text-sm font-medium"
+      className="h-11 rounded-2xl bg-card px-3 text-sm font-medium"
     >
-      <span className="flex items-center gap-2.5">
-        <span className="relative size-5 shrink-0 overflow-hidden rounded-sm">
-          <Image src={iconSrc} alt="" fill className="object-contain" />
-        </span>
-        <span>{label}</span>
-      </span>
-      <Download className="size-4" />
+      {label}
     </Button>
   );
 }

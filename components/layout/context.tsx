@@ -91,7 +91,6 @@ export function LayoutProvider({ children, style: customStyle, bodyClassName = '
         className="flex grow"
         data-sidebar-open={isSidebarOpen}
         style={style}
-        suppressHydrationWarning
       >
         <TooltipProvider delayDuration={0}>
           {children}

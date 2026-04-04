@@ -67,7 +67,7 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
             <Button
               size="sm"
               variant="primary"
-              className="bg-yellow-600 hover:bg-yellow-700 text-white gap-1.5"
+              className="gap-1.5 border border-foreground/10 bg-foreground text-background hover:bg-foreground/90"
               onClick={cacheAllPages}
               disabled={isCaching}
             >

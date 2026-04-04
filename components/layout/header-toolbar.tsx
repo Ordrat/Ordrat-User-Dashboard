@@ -31,10 +31,12 @@ import { clearQueue } from '@/lib/offline-db';
 import { useParams } from "next/navigation";
 import { LanguageSwitcher } from "./language-switcher";
 import { useTranslation } from "react-i18next";
+import { useMounted } from '@/hooks/use-mounted';
 
 export function HeaderToolbar() {
   const { isMobile } = useLayout();
   const { theme, setTheme } = useTheme();
+  const mounted = useMounted();
   const { data: session } = useSession();
   const params = useParams();
   const locale = (params?.locale as string) ?? 'en';
@@ -61,7 +63,7 @@ export function HeaderToolbar() {
       <LanguageSwitcher />
 
       <Button mode="icon" variant="outline" onClick={toggleTheme}>
-        {theme === 'light' ? <Moon /> : <Sun />}
+        {mounted ? (theme === 'light' ? <Moon /> : <Sun />) : <span aria-hidden className="size-4" />}
       </Button>
       {!isMobile && (
         <InputWrapper className="w-full lg:w-40">
@@ -74,7 +76,7 @@ export function HeaderToolbar() {
         <DropdownMenuTrigger className="cursor-pointer">
           <Avatar className="size-7">
             <AvatarFallback>{initials}</AvatarFallback>
-            <AvatarIndicator className="-end-2 -top-2">
+            <AvatarIndicator className="-inset-e-2 -top-2">
               <AvatarStatus variant="online" className="size-2.5" />
             </AvatarIndicator>
           </Avatar>
@@ -84,7 +86,7 @@ export function HeaderToolbar() {
           <div className="flex items-center gap-3 px-3 py-2">
             <Avatar className="shrink-0">
               <AvatarFallback>{initials}</AvatarFallback>
-              <AvatarIndicator className="-end-1.5 -top-1.5">
+              <AvatarIndicator className="-inset-e-1.5 -top-1.5">
                 <AvatarStatus variant="online" className="size-2.5" />
               </AvatarIndicator>
             </Avatar>

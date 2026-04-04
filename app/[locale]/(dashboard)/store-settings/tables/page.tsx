@@ -283,6 +283,7 @@ export default function TablesPage() {
           ) : !tables || tables.length === 0 ? (
             <div className="p-10 text-center text-muted-foreground">{t('tables.emptyState')}</div>
           ) : (
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -352,6 +353,7 @@ export default function TablesPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>

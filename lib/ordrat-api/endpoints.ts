@@ -169,6 +169,88 @@ export const Theme = {
   GetAll: { method: 'GET', path: '/api/Theme/GetAll' },
 } as const;
 
+// ─── ShopPaymentGateway ───────────────────────────────────────────────────────
+
+export const ShopPaymentGateway = {
+  /** GET — returns array of payment gateways for the shop */
+  GetByShopId: (shopId: string) => `/api/ShopPaymentGateway/GetByShopId/${shopId}` as const,
+
+  /** POST — JSON body: CreateShopPaymentGatewayDTO (omits gatewayConfigValues) */
+  Create: { method: 'POST', path: '/api/ShopPaymentGateway/Create' },
+
+  /** PUT — JSON body: UpdateShopPaymentGatewayDTO (omits gatewayConfigValues) */
+  Update: (id: string) => ({ method: 'PUT', path: `/api/ShopPaymentGateway/Update/${id}` } as const),
+} as const;
+
+// ─── Table ────────────────────────────────────────────────────────────────────
+
+export const Table = {
+  /** GET — returns array of tables for a branch */
+  GetAllByBranch: (branchId: string) => `/api/Table/GetAllShopTables/${branchId}` as const,
+
+  /** GET — returns single table */
+  GetById: (id: string) => `/api/Table/GetTableById/${id}` as const,
+
+  /**
+   * POST — JSON body: CreateTableDto
+   * Fields: tableNumber, tableStatus, capacity, location, branchId, descriptionEn, descriptionAr
+   */
+  Create: (branchId: string) => `/api/Table/CreateTable/${branchId}` as const,
+
+  /**
+   * PUT — JSON body: UpdateTableDto
+   * Fields: tableNumber, descriptionEn, descriptionAr, capacity, location
+   */
+  Update: (id: string) => `/api/Table/UpdateTable/${id}` as const,
+
+  /** PUT — body: TableStatus enum int (0=Available, 1=Occupied, 2=Reserved) */
+  ChangeStatus: (id: string) => `/api/Table/ChangeTableStatus/ChangeTableStatus/${id}` as const,
+} as const;
+
+// ─── ShopContactInfo ──────────────────────────────────────────────────────────
+
+export const ShopContactInfo = {
+  /** GET — returns contact info for the shop */
+  GetByShopId: (shopId: string) => `/api/ShopContactInfo/GetByShopId/${shopId}` as const,
+
+  /**
+   * POST — JSON body: CreateShopContactInfoDto
+   * Fields: whatsAppNumber, facebookLink, xLink, instagramLink, shopId
+   */
+  Create: { method: 'POST', path: '/api/ShopContactInfo/Create' },
+
+  /**
+   * PUT — JSON body: UpdateShopContactInfoDto
+   * Fields: whatsAppNumber, facebookLink, xLink, instagramLink
+   */
+  Update: (id: string) => ({ method: 'PUT', path: `/api/ShopContactInfo/Update/${id}` } as const),
+
+  /** DELETE */
+  Delete: (id: string) => `/api/ShopContactInfo/Delete/${id}` as const,
+} as const;
+
+// ─── Logs ─────────────────────────────────────────────────────────────────────
+
+export const Logs = {
+  /**
+   * GET — query params: PageNumber, PageSize, StartTime, EndTime,
+   *   Action (LogsActionType enum 0–46), Entity (string), EntityId (uuid)
+   * Backend auto-scopes to the authenticated user's shop.
+   */
+  GetLogsOverTime: { method: 'GET', path: '/api/Logs/GetLogsOverTime' },
+} as const;
+
 // ─── Aggregated export ────────────────────────────────────────────────────────
 
-export const ENDPOINTS = { Auth, Shop, Branch, Category, Currency, Theme } as const;
+export const ENDPOINTS = {
+  Auth,
+  Shop,
+  Branch,
+  Category,
+  Currency,
+  Theme,
+  ShopPaymentGateway,
+  Table,
+  ShopContactInfo,
+  Logs,
+} as const;

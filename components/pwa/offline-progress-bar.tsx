@@ -105,10 +105,10 @@ export function OfflineProgressBar() {
           <PopoverTrigger asChild>
             <button
               className={cn(
-                'flex items-center gap-1.5 pb-0.5 px-2 rounded-t text-[10px] font-medium transition-colors',
-                isCompleteState && 'text-green-600 dark:text-green-400',
-                isFailureState && 'text-red-600 dark:text-red-400 cursor-pointer hover:opacity-80',
-                !isCompleteState && !isFailureState && 'text-yellow-600 dark:text-yellow-400 cursor-pointer hover:opacity-80',
+                'flex items-center gap-1.5 rounded-t-md border border-b-0 border-foreground/10 bg-foreground px-2 py-0.5 text-[10px] font-medium text-background transition-colors',
+                isCompleteState && 'cursor-default',
+                isFailureState && 'cursor-pointer hover:bg-foreground/90',
+                !isCompleteState && !isFailureState && 'cursor-pointer hover:bg-foreground/90',
               )}
               disabled={pendingCount === 0 && failedCount === 0}
             >
@@ -197,7 +197,7 @@ export function OfflineProgressBar() {
       {/* Syncing label */}
       {isSyncingState && (
         <div className="pb-0.5">
-          <span className="text-[10px] font-medium text-[#B91C1C]">
+          <span className="rounded-t-md border border-b-0 border-foreground/10 bg-foreground px-2 py-0.5 text-[10px] font-medium text-background">
             {t('pwa.queue_syncing_progress', { synced: syncedCount, total: totalToSync })}
           </span>
         </div>

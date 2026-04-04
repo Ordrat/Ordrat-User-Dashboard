@@ -18,7 +18,7 @@ export function LanguageSwitcher() {
     changeLanguage(nextLang);
     const segments = pathname.split('/');
     segments[1] = nextLang;
-    router.push(segments.join('/'));
+    router.replace(segments.join('/'));
   }
 
   return (
@@ -27,7 +27,7 @@ export function LanguageSwitcher() {
       {isArabic ? (
         <span>English</span>
       ) : (
-        <span style={{ fontFamily: 'var(--font-tajawal)' }}>العربية</span>
+        <span style={{ fontFamily: 'var(--font-almarai)' }}>العربية</span>
       )}
     </Button>
   );
