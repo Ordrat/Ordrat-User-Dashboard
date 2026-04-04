@@ -36,9 +36,10 @@ export function SidebarResourcesMenu() {
       defaultValue="resource-trigger"
       className="space-y-7.5 px-2.5"
       classNames={{
-        item: 'h-8.5 px-2.5 text-sm font-normal text-foreground hover:bg-brand hover:text-brand-foreground focus-visible:bg-brand focus-visible:text-brand-foreground data-[selected=true]:bg-brand data-[selected=true]:text-brand-foreground [&[data-selected=true]_svg]:opacity-100',
+        item: 'h-8.5 px-2.5 text-sm font-normal text-foreground hover:bg-muted hover:text-foreground focus-visible:bg-muted focus-visible:text-foreground data-[selected=true]:bg-brand data-[selected=true]:text-brand-foreground [&[data-selected=true]_svg]:opacity-100',
         subTrigger: 'text-xs font-normal text-muted-foreground hover:bg-transparent',
         subContent: 'ps-0',
+        subWrapper: 'space-y-1',
       }}
     >
       {MENU_SIDEBAR_RESOURCES.map((item, index) => (

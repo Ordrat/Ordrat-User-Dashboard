@@ -1,17 +1,20 @@
 import { useCallback } from "react";
-import { MENU_SIDEBAR_MAIN } from "@/config/layout.config";
+import { MENU_SIDEBAR_WORKSPACES } from "@/config/layout.config";
 import {
   AccordionMenu,
-  AccordionMenuGroup,
+  AccordionMenuIndicator,
+  AccordionMenuSub,
+  AccordionMenuSubTrigger,
+  AccordionMenuSubContent,
   AccordionMenuItem,
-  AccordionMenuLabel
 } from '@/components/ui/accordion-menu';
 import { Badge } from '@/components/ui/badge';
+import { Minus, Plus } from "lucide-react";
 import { usePathname, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 
-export function SidebarPrimaryMenu() {
+export function SidebarWorkspacesMenu() {
   const pathname = usePathname();
   const params = useParams();
   const locale = (params?.locale as string) ?? 'en';
@@ -28,22 +31,31 @@ export function SidebarPrimaryMenu() {
 
   return (
     <AccordionMenu
-      selectedValue={pathname}
+      selectedValue="workspace-trigger"
       matchPath={matchPath}
-      type="multiple"
+      type="single"
+      collapsible
+      defaultValue="workspace-trigger"
       className="space-y-7.5 px-2.5"
       classNames={{
-        label: 'text-xs font-normal text-muted-foreground mb-2',
         item: 'h-8.5 px-2.5 text-sm font-normal text-foreground hover:bg-muted hover:text-foreground focus-visible:bg-muted focus-visible:text-foreground data-[selected=true]:bg-brand data-[selected=true]:text-brand-foreground [&[data-selected=true]_svg]:opacity-100',
-        group: 'space-y-1',
+        subTrigger: 'text-xs font-normal text-muted-foreground hover:bg-transparent group [&_[data-slot="accordion-menu-sub-indicator"]]:hidden',
+        subContent: 'ps-0',
+        subWrapper: 'space-y-1',
+        indicator: 'ms-auto flex items-center font-medium',
       }}
     >
-      {MENU_SIDEBAR_MAIN.map((item, index) => {
-        return (
-          <AccordionMenuGroup key={index}>
-            <AccordionMenuLabel>
-              {item.title ? t(item.title) : null}
-            </AccordionMenuLabel>
+      {MENU_SIDEBAR_WORKSPACES.map((item, index) => (
+        <AccordionMenuSub key={index} value="workspaces">
+          <AccordionMenuSubTrigger value="workspace-trigger">
+            <span>{item.title ? t(item.title) : null}</span>
+            <AccordionMenuIndicator>
+              <Plus className="size-3.5 shrink-0 transition-transform duration-200 hidden group-data-[state=open]:block" />
+              <Minus className="size-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]:hidden" />
+            </AccordionMenuIndicator>
+          </AccordionMenuSubTrigger>
+
+          <AccordionMenuSubContent type="single" collapsible parentValue="workspace-trigger">
             {item.children?.map((child, childIndex) => {
               const href = child.path && child.path !== '#'
                 ? `/${locale}${child.path}`
@@ -53,14 +65,14 @@ export function SidebarPrimaryMenu() {
                   <Link href={href}>
                     {child.icon && <child.icon />}
                     <span>{t(child.title ?? '')}</span>
-                    {child.badge == 'Beta' && <Badge size="sm" variant="destructive" appearance="light">{child.badge}</Badge>}
+                    {child.badge == 'Pro' && <Badge size="sm" variant="success" appearance="light">{child.badge}</Badge>}
                   </Link>
                 </AccordionMenuItem>
-              )
+              );
             })}
-          </AccordionMenuGroup>
-        )
-      })}
+          </AccordionMenuSubContent>
+        </AccordionMenuSub>
+      ))}
     </AccordionMenu>
   );
 }

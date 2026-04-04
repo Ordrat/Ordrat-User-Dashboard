@@ -1,5 +1,5 @@
 import { ReactNode, Suspense } from 'react';
-import { Inter, Tajawal } from 'next/font/google';
+import { Inter, Almarai } from 'next/font/google';
 import { cn } from '@/lib/utils';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from '@/components/ui/sonner';
@@ -13,13 +13,15 @@ import { SWUpdatePrompt } from '@/components/pwa/sw-update-prompt';
 import { SessionWarning } from '@/components/pwa/session-warning';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
+import NextTopLoader from 'nextjs-toploader';
+
 import '@/styles/globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
-const tajawal = Tajawal({
+const almarai = Almarai({
   subsets: ['arabic'],
-  weight: ['200', '300', '400', '500', '700', '800', '900'],
-  variable: '--font-tajawal',
+  weight: ['300', '400', '700', '800'],
+  variable: '--font-almarai',
   display: 'swap',
 });
 
@@ -53,7 +55,7 @@ export default async function RootLayout({
   children: ReactNode;
 }) {
   return (
-    <html className={cn('h-full', inter.variable, tajawal.variable)} suppressHydrationWarning>
+    <html className={cn('h-full', inter.variable, almarai.variable)} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -77,6 +79,12 @@ export default async function RootLayout({
         className="antialiased flex h-full text-base text-foreground bg-muted font-sans overflow-x-hidden"
         suppressHydrationWarning
       >
+        <NextTopLoader
+          color="var(--brand)"
+          showSpinner={false}
+          height={3}
+          shadow={false}
+        />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

@@ -18,7 +18,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { TriangleAlert } from 'lucide-react';
+import { TriangleAlert, LoaderCircle } from 'lucide-react';
 
 export default function ChangePasswordPage() {
   const { t } = useTranslation('common');
@@ -153,6 +153,7 @@ export default function ChangePasswordPage() {
             className="w-full auth-brand-button"
             disabled={isSubmitting}
           >
+            {isSubmitting && <LoaderCircle className="size-4 animate-spin" />}
             {isSubmitting ? t('actions.saving') : t('auth.setNewPassword')}
           </Button>
         </form>
