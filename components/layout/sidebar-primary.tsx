@@ -154,8 +154,8 @@ export function SidebarPrimary() {
                     className={cn(
                       'shrink-0 rounded-md size-9',
                       'data-[state=open]:bg-brand data-[state=open]:text-brand-foreground',
-                      'hover:bg-muted hover:text-foreground',
-                      'focus-visible:bg-muted focus-visible:text-foreground',
+                      'hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-foreground',
+                      'focus-visible:bg-zinc-200 dark:focus-visible:bg-zinc-800 focus-visible:text-foreground',
                     )}
                   >
                     <Link href={href}>
@@ -172,15 +172,15 @@ export function SidebarPrimary() {
 
       {/* Footer */}
       <div className="flex flex-col items-center gap-2.5 shrink-0">
-        <Button variant="ghost" mode="icon" className="text-muted-foreground hover:text-foreground">
+        <Button variant="ghost" mode="icon" className="text-muted-foreground hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-foreground">
           <Mails className="opacity-100"/>
         </Button>
 
-        <Button variant="ghost" mode="icon" className="text-muted-foreground hover:text-foreground">
+        <Button variant="ghost" mode="icon" className="text-muted-foreground hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-foreground">
           <NotepadText className="opacity-100"/>
         </Button>
         
-        <Button variant="ghost" mode="icon" className="text-muted-foreground hover:text-foreground">
+        <Button variant="ghost" mode="icon" className="text-muted-foreground hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-foreground">
           <Settings className="opacity-100"/>
         </Button>
 
