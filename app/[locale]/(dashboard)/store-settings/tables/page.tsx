@@ -16,7 +16,7 @@ import { useUIStore } from '@/stores/ui-store';
 import { TableResponse } from '@/lib/ordrat-api/schemas';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -40,50 +40,337 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const TABLE_LOCATIONS = [0, 1, 2] as const;
 const TABLE_STATUSES = [0, 1, 2] as const;
 
-const STATUS_CLASSES: Record<number, string> = {
-  0: 'border-emerald-700 bg-emerald-600 text-white',
-  1: 'border-rose-700 bg-rose-600 text-white',
-  2: 'border-amber-400 bg-amber-300 text-slate-950',
+const STATUS_COLORS = {
+  0: {
+    chair: 'var(--color-zinc-200)',
+    chairAccent: 'var(--color-zinc-400)',
+    tabletop: 'var(--color-border)',
+    stroke: 'var(--color-zinc-500)',
+  },
+  1: {
+    chair: 'var(--color-zinc-200)',
+    chairAccent: 'var(--color-zinc-400)',
+    tabletop: 'var(--color-border)',
+    stroke: 'var(--color-zinc-500)',
+  },
+  2: {
+    chair: 'var(--color-zinc-200)',
+    chairAccent: 'var(--color-zinc-400)',
+    tabletop: 'var(--color-border)',
+    stroke: 'var(--color-zinc-500)',
+  },
+} as const;
+
+const STATUS_BADGE_VARIANTS: Record<number, 'success' | 'destructive' | 'warning'> = {
+  0: 'success',
+  1: 'destructive',
+  2: 'warning',
 };
+
+const STATUS_LEGEND_CLASSES: Record<number, string> = {
+  0: 'bg-emerald-500',
+  1: 'bg-rose-500',
+  2: 'bg-amber-400',
+};
+
+// ─── SVG Top-Down Table ───────────────────────────────────────────────────────
+
+type ChairRect = { x: number; y: number; w: number; h: number; rx: number };
+
+function ChairShape({
+  chair,
+  fill,
+  accent,
+  stroke,
+}: {
+  chair: ChairRect;
+  fill: string;
+  accent: string;
+  stroke: string;
+}) {
+  const isHorizontal = chair.w > chair.h;
+  const isTop = isHorizontal && chair.y < 30;
+  const isLeft = !isHorizontal && chair.x < 30;
+  const inset = {
+    x: chair.x + 1.5,
+    y: chair.y + 1.5,
+    w: Math.max(chair.w - 3, 1),
+    h: Math.max(chair.h - 3, 1),
+    rx: Math.max(chair.rx - 0.75, 0.75),
+  };
+
+  const accentRect = isHorizontal
+    ? {
+        x: chair.x + 3,
+        y: isTop ? chair.y : chair.y + chair.h - 5,
+        w: chair.w - 6,
+        h: 4,
+      }
+    : {
+        x: isLeft ? chair.x : chair.x + chair.w - 5,
+        y: chair.y + 3,
+        w: 4,
+        h: chair.h - 6,
+      };
+
+  return (
+    <g>
+      <rect
+        x={chair.x}
+        y={chair.y}
+        width={chair.w}
+        height={chair.h}
+        rx={chair.rx}
+        fill={fill}
+        stroke={stroke}
+        strokeWidth="1.25"
+      />
+      <rect
+        x={inset.x}
+        y={inset.y}
+        width={inset.w}
+        height={inset.h}
+        rx={inset.rx}
+        fill="none"
+        stroke={accent}
+        strokeOpacity="0.4"
+        strokeWidth="0.75"
+      />
+      <rect
+        x={accentRect.x}
+        y={accentRect.y}
+        width={accentRect.w}
+        height={accentRect.h}
+        rx="1"
+        fill={accent}
+      />
+    </g>
+  );
+}
+
+function getChairs(capacity: number): ChairRect[] {
+  const capped = Math.min(capacity, 8);
+  if (capped <= 4) {
+    const all: ChairRect[] = [
+      { x: 48, y: 5,  w: 24, h: 16, rx: 2 },
+      { x: 48, y: 99, w: 24, h: 16, rx: 2 },
+      { x: 5,  y: 48, w: 16, h: 24, rx: 2 },
+      { x: 99, y: 48, w: 16, h: 24, rx: 2 },
+    ];
+    return all.slice(0, capped);
+  }
+
+  if (capped === 5) {
+    return [
+      { x: 30, y: 5,  w: 24, h: 16, rx: 2 },
+      { x: 66, y: 5,  w: 24, h: 16, rx: 2 },
+      { x: 48, y: 99, w: 24, h: 16, rx: 2 },
+      { x: 5,  y: 48, w: 16, h: 24, rx: 2 },
+      { x: 99, y: 48, w: 16, h: 24, rx: 2 },
+    ];
+  }
+
+  if (capped === 6) {
+    return [
+      { x: 30, y: 5,  w: 24, h: 16, rx: 2 },
+      { x: 66, y: 5,  w: 24, h: 16, rx: 2 },
+      { x: 30, y: 99, w: 24, h: 16, rx: 2 },
+      { x: 66, y: 99, w: 24, h: 16, rx: 2 },
+      { x: 5,  y: 48, w: 16, h: 24, rx: 2 },
+      { x: 99, y: 48, w: 16, h: 24, rx: 2 },
+    ];
+  }
+
+  const all: ChairRect[] = [
+    { x: 30, y: 5,  w: 24, h: 16, rx: 2 },
+    { x: 66, y: 5,  w: 24, h: 16, rx: 2 },
+    { x: 30, y: 99, w: 24, h: 16, rx: 2 },
+    { x: 66, y: 99, w: 24, h: 16, rx: 2 },
+    { x: 5,  y: 30, w: 16, h: 24, rx: 2 },
+    { x: 5,  y: 66, w: 16, h: 24, rx: 2 },
+    { x: 99, y: 30, w: 16, h: 24, rx: 2 },
+    { x: 99, y: 66, w: 16, h: 24, rx: 2 },
+  ];
+  return all.slice(0, capped);
+}
+
+function TableTopDown({
+  tableNumber,
+  capacity,
+  status,
+}: {
+  tableNumber: number;
+  capacity: number;
+  status: number;
+}) {
+  const colors = STATUS_COLORS[status as keyof typeof STATUS_COLORS] ?? STATUS_COLORS[0];
+  const chairs = getChairs(capacity);
+  const isRound = capacity <= 4;
+
+  return (
+    <svg
+      viewBox="0 0 120 120"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="h-40 w-40"
+    >
+      {chairs.map((chair, index) => (
+        <ChairShape
+          key={index}
+          chair={chair}
+          fill={colors.chair}
+          accent={colors.chairAccent}
+          stroke={colors.stroke}
+        />
+      ))}
+      {isRound ? (
+        <circle
+          cx="60" cy="60" r="30"
+          fill={colors.tabletop}
+          stroke={colors.stroke}
+          strokeWidth="2.5"
+        />
+      ) : (
+        <rect
+          x="26" y="26" width="68" height="68" rx="12"
+          fill={colors.tabletop}
+          stroke={colors.stroke}
+          strokeWidth="2.5"
+        />
+      )}
+      <text
+        x="60" y="65"
+        textAnchor="middle"
+        fontFamily="system-ui, sans-serif"
+        fontSize="20"
+        fontWeight="600"
+        fill="#3f3f46"
+      >
+        {tableNumber}
+      </text>
+    </svg>
+  );
+}
+
+// ─── Status Badge ─────────────────────────────────────────────────────────────
 
 function TableStatusBadge({
   status,
   label,
-  className,
 }: {
   status: (typeof TABLE_STATUSES)[number];
   label: string;
-  className?: string;
 }) {
   return (
     <Badge
-      variant="outline"
+      variant={STATUS_BADGE_VARIANTS[status]}
+      appearance="light"
       size="sm"
-      className={[
-        'h-6 min-w-25 justify-center rounded-full px-2.5 font-semibold tracking-[0.01em]',
-        STATUS_CLASSES[status],
-        className,
-      ]
-        .filter(Boolean)
-        .join(' ')}
+      className="h-5 gap-1 px-1.5 font-medium"
     >
       {label}
     </Badge>
+  );
+}
+
+// ─── Restaurant Table Card ────────────────────────────────────────────────────
+
+function RestaurantTableCard({
+  table,
+  onEdit,
+  onDelete,
+  onStatusChange,
+  isStatusChanging,
+}: {
+  table: TableResponse;
+  onEdit: () => void;
+  onDelete: () => void;
+  onStatusChange: (status: string) => void;
+  isStatusChanging: boolean;
+}) {
+  const { t } = useTranslation('common');
+
+  const locationLabel = t(`tables.location${table.location}` as never);
+  const statusLabel = t(`tables.status${table.tableStatus}` as never);
+
+  return (
+    <div className="group relative overflow-hidden rounded-[30px] border border-border/70 bg-transparent p-5 transition-all duration-300">
+      <div className="absolute top-5 inset-e-5 flex gap-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          mode="icon"
+          onClick={onEdit}
+          aria-label={t('actions.edit')}
+          className="size-8 rounded-full border border-border/70 bg-background/80 backdrop-blur hover:bg-zinc-200 dark:hover:bg-zinc-700"
+        >
+          <Pencil className="size-3.5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          mode="icon"
+          onClick={onDelete}
+          aria-label={t('actions.delete')}
+          className="size-8 rounded-full border border-border/70 bg-background/80 text-destructive backdrop-blur hover:bg-red-100 hover:text-destructive dark:hover:bg-red-950"
+        >
+          <Trash2 className="size-3.5" />
+        </Button>
+      </div>
+
+      <div className="relative flex items-start justify-between gap-3 pe-20">
+        <div>
+          <Select
+            value={String(table.tableStatus)}
+            onValueChange={onStatusChange}
+            disabled={isStatusChanging}
+          >
+            <SelectTrigger className="h-auto w-auto gap-1 border-0 bg-transparent p-0 shadow-none ring-0 hover:bg-transparent focus:ring-0">
+              <SelectValue>
+                <TableStatusBadge
+                  status={table.tableStatus as (typeof TABLE_STATUSES)[number]}
+                  label={statusLabel}
+                />
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {TABLE_STATUSES.map((s) => (
+                <SelectItem key={s} value={String(s)}>
+                  <TableStatusBadge status={s} label={t(`tables.status${s}` as never)} />
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="mt-2 flex items-center justify-center [&_svg]:max-w-full [&_svg]:h-auto">
+        <TableTopDown
+          tableNumber={table.tableNumber}
+          capacity={table.capacity}
+          status={table.tableStatus}
+        />
+      </div>
+
+      <div className="mt-5 grid grid-cols-2 gap-4">
+        <div className="rounded-lg border border-border/70 bg-background/60 px-2 py-1.5">
+          <p className="text-[9px] uppercase tracking-[0.12em] text-muted-foreground">{t('tables.capacity')}</p>
+          <p className="mt-0.5 text-[0.8125rem] font-semibold text-foreground">{table.capacity} {t('tables.seats')}</p>
+        </div>
+        <div className="rounded-lg border border-border/70 bg-background/60 px-2 py-1.5">
+          <p className="text-[9px] uppercase tracking-[0.12em] text-muted-foreground">{t('tables.location')}</p>
+          <p className="mt-0.5 text-[0.8125rem] font-semibold text-foreground">{locationLabel}</p>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -108,6 +395,8 @@ export default function TablesPage() {
   const { isOffline } = useOnlineStatus();
   const { data: branches, isLoading: branchesLoading } = useBranches();
   const [selectedBranchId, setSelectedBranchId] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [locationFilter, setLocationFilter] = useState<string>('all');
   const activeBranchId = selectedBranchId || branches?.[0]?.id || '';
 
   const { data: tables, isLoading: tablesLoading, isError } = useTables(activeBranchId);
@@ -132,16 +421,12 @@ export default function TablesPage() {
 
   useEffect(() => {
     if (branchesLoading) return;
-
     if (!branches?.length) {
       if (selectedBranchId) setSelectedBranchId('');
       return;
     }
-
     const hasSelectedBranch = branches.some((branch) => branch.id === selectedBranchId);
-    if (!hasSelectedBranch) {
-      setSelectedBranchId(branches[0].id);
-    }
+    if (!hasSelectedBranch) setSelectedBranchId(branches[0].id);
   }, [branches, branchesLoading, selectedBranchId]);
 
   function openEdit(table: TableResponse) {
@@ -232,131 +517,137 @@ export default function TablesPage() {
     });
   }
 
+  const filteredTables = (tables ?? []).filter((table) => {
+    const matchesStatus = statusFilter === 'all' || String(table.tableStatus) === statusFilter;
+    const matchesLocation = locationFilter === 'all' || String(table.location) === locationFilter;
+
+    return matchesStatus && matchesLocation;
+  });
+
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="w-full sm:w-64">
-          <Select
-            value={activeBranchId}
-            onValueChange={setSelectedBranchId}
-            disabled={branchesLoading}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={t('tables.selectBranch')} />
+    <div className="min-w-0 space-y-6 py-6">
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-start justify-between gap-3 xl:flex-nowrap">
+        <div className="grid min-w-0 flex-1 gap-2.5 lg:grid-cols-2 xl:grid-cols-[fit-content(12rem)_fit-content(8rem)_fit-content(9rem)_fit-content(7rem)] xl:items-center">
+          <div className="w-full sm:w-fit">
+            <Select
+              value={activeBranchId}
+              onValueChange={setSelectedBranchId}
+              disabled={branchesLoading}
+            >
+              <SelectTrigger className="h-8 w-full sm:w-fit sm:min-w-32 sm:max-w-44 px-2.5 text-xs">
+                <SelectValue placeholder={t('tables.selectBranch')} />
+              </SelectTrigger>
+              <SelectContent>
+                {branches?.map((branch) => (
+                  <SelectItem key={branch.id} value={branch.id}>
+                    {branch.name || branch.nameEn || branch.nameAr || branch.id}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="h-8 w-full sm:w-fit sm:min-w-0 px-2.5 text-xs">
+              <SelectValue placeholder={t('tables.filterStatus')} />
             </SelectTrigger>
             <SelectContent>
-              {branches?.map((branch) => (
-                <SelectItem key={branch.id} value={branch.id}>
-                  {branch.name || branch.nameEn || branch.nameAr || branch.id}
+              <SelectItem value="all">{t('tables.status')}</SelectItem>
+              {TABLE_STATUSES.map((status) => (
+                <SelectItem key={status} value={String(status)}>
+                  {t(`tables.status${status}` as never)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+
+          <Select value={locationFilter} onValueChange={setLocationFilter}>
+            <SelectTrigger className="h-8 w-full sm:w-fit sm:min-w-0 px-2.5 text-xs">
+              <SelectValue placeholder={t('tables.filterLocation')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('tables.locations')}</SelectItem>
+              {TABLE_LOCATIONS.map((location) => (
+                <SelectItem key={location} value={String(location)}>
+                  {t(`tables.location${location}` as never)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
         </div>
 
-        <Button
-          onClick={() => setAddOpen(true)}
-          disabled={!activeBranchId}
-          className="bg-brand hover:bg-brand/90 text-brand-foreground"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          {t('tables.add')}
-        </Button>
+        <div className="flex shrink-0 items-center gap-2 self-start">
+          
+
+          <div className="flex w-fit items-center gap-1.5 rounded-full border border-border/70 bg-card px-2 py-1.5 dark:bg-card">
+            {TABLE_STATUSES.map((status) => (
+              <Tooltip key={status}>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label={t(`tables.status${status}` as never)}
+                    className="size-3 rounded-full ring-1 ring-background transition-transform hover:scale-110 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    <span className={[ 'block size-full rounded-full', STATUS_LEGEND_CLASSES[status] ].join(' ')} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  {t(`tables.status${status}` as never)}
+                </TooltipContent>
+              </Tooltip>
+            ))}
+          </div>
+          <Button
+            size="sm"
+            onClick={() => setAddOpen(true)}
+            disabled={!activeBranchId}
+            className="h-8 bg-brand text-brand-foreground hover:bg-brand/90"
+          >
+            <Plus className="w-4 h-4" />
+            {t('tables.add')}
+          </Button>
+        </div>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          {!activeBranchId ? (
-            <div className="p-10 text-center text-muted-foreground">
-              {branchesLoading ? (
-                <div className="p-10 flex justify-center">
-                  <LoaderCircle className="size-6 animate-spin text-brand" />
-                </div>
-              ) : t('tables.selectBranchPrompt')}
-            </div>
-          ) : tablesLoading ? (
-            <div className="p-10 flex justify-center">
+      {/* Content area */}
+      {!activeBranchId ? (
+        <div className="p-10 text-center text-muted-foreground">
+          {branchesLoading ? (
+            <div className="flex justify-center">
               <LoaderCircle className="size-6 animate-spin text-brand" />
             </div>
-          ) : isError ? (
-            <div className="p-6 text-center text-destructive">{t('tables.loadError')}</div>
-          ) : !tables || tables.length === 0 ? (
-            <div className="p-10 text-center text-muted-foreground">{t('tables.emptyState')}</div>
           ) : (
-            <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('tables.tableNumber')}</TableHead>
-                  <TableHead>{t('tables.capacity')}</TableHead>
-                  <TableHead>{t('tables.location')}</TableHead>
-                  <TableHead>{t('tables.status')}</TableHead>
-                  <TableHead className="ltr:text-right rtl:text-left">{t('tables.actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tables.map((table) => (
-                  <TableRow key={table.id}>
-                    <TableCell className="font-medium">{table.tableNumber}</TableCell>
-                    <TableCell>{table.capacity}</TableCell>
-                    <TableCell>{t(`tables.location${table.location}` as never)}</TableCell>
-                    <TableCell>
-                      <Select
-                        indicatorVisibility={false}
-                        value={String(table.tableStatus)}
-                        onValueChange={(v) => onStatusChange(table, v)}
-                        disabled={changeStatus.isPending}
-                      >
-                        <SelectTrigger className="h-9 w-38 justify-start rounded-xl border-border/70 bg-muted/20 px-2.5 shadow-none [&>span]:flex [&>span]:w-full [&>span]:items-center [&>span]:justify-start">
-                          <SelectValue>
-                            <TableStatusBadge
-                              status={table.tableStatus as (typeof TABLE_STATUSES)[number]}
-                              label={t(`tables.status${table.tableStatus}` as never)}
-                              className="min-w-0"
-                            />
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl border-border/70 p-1 shadow-lg shadow-black/5">
-                          {TABLE_STATUSES.map((s) => (
-                            <SelectItem
-                              key={s}
-                              value={String(s)}
-                              className="rounded-lg ps-2 pe-2 py-2 focus:bg-muted/70"
-                            >
-                              <TableStatusBadge
-                                status={s}
-                                label={t(`tables.status${s}` as never)}
-                                className="w-full justify-start"
-                              />
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell className="ltr:text-right rtl:text-left">
-                      <div className="inline-flex items-center gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => openEdit(table)}>
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => handleDeleteTable(table)}
-                          disabled={deleteTableMut.isPending}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            </div>
+            t('tables.selectBranchPrompt')
           )}
-        </CardContent>
-      </Card>
+        </div>
+      ) : tablesLoading ? (
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-104 rounded-[30px]" />
+          ))}
+        </div>
+      ) : isError ? (
+        <div className="p-6 text-center text-destructive">{t('tables.loadError')}</div>
+      ) : !tables || tables.length === 0 ? (
+        <div className="p-10 text-center text-muted-foreground">{t('tables.emptyState')}</div>
+      ) : filteredTables.length === 0 ? (
+        <div className="p-10 text-center text-muted-foreground">{t('tables.emptyFilteredState')}</div>
+      ) : (
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredTables.map((table) => (
+            <RestaurantTableCard
+              key={table.id}
+              table={table}
+              onEdit={() => openEdit(table)}
+              onDelete={() => handleDeleteTable(table)}
+              onStatusChange={(status) => onStatusChange(table, status)}
+              isStatusChanging={changeStatus.isPending}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Add Dialog */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>

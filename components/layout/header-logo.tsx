@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Menu, PanelRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useLayout } from './context';
 import {
   Sheet,
@@ -19,6 +20,7 @@ import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
 
 export function HeaderLogo() {
+  const { t } = useTranslation('common');
   const pathname = usePathname();
   const params = useParams();
   const locale = (params?.locale as string) ?? 'en';
@@ -59,7 +61,7 @@ export function HeaderLogo() {
               </Button>
             </SheetTrigger>
             <SheetContent
-              className="p-0 gap-0 w-[280px] lg:w-(--sidebar-width)"
+              className="p-0 gap-0 w-70 lg:w-(--sidebar-width)"
               side="left"
               close={false}
             >
@@ -89,15 +91,18 @@ export function HeaderLogo() {
             />
           </Link>
 
-          {/* Sidebar toggle */}
-          <Button
-            mode="icon"
-            variant="ghost"
-            onClick={sidebarToggle}
-            className="hidden lg:inline-flex text-muted-foreground hover:text-foreground"
-          >
-            <PanelRight className="-rotate-180 in-data-[sidebar-open=false]:rotate-0 rtl:rotate-0 rtl:in-data-[sidebar-open=false]:-rotate-180 opacity-100" />
-          </Button>
+          <div className="hidden lg:flex items-center gap-1">
+            <Button
+              mode="icon"
+              variant="ghost"
+              onClick={sidebarToggle}
+              className="text-muted-foreground hover:text-foreground"
+              aria-label={t('actions.toggleSidebar')}
+              title={t('actions.toggleSidebar')}
+            >
+              <PanelRight className="-rotate-180 in-data-[sidebar-open=false]:rotate-0 rtl:rotate-0 rtl:in-data-[sidebar-open=false]:-rotate-180 opacity-100" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>

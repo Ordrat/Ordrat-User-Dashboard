@@ -1,11 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
+import {
+  createColumnHelper,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+  type RowSelectionState,
+  type SortingState,
+  type VisibilityState,
+} from '@tanstack/react-table';
 
 import {
   LoaderCircle,
@@ -16,6 +26,7 @@ import {
   TriangleAlert,
   Search,
   Target,
+  Columns3,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -27,14 +38,7 @@ import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -51,6 +55,11 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { DataGrid, DataGridContainer } from '@/components/ui/data-grid';
+import { DataGridTable, DataGridTableRowSelect, DataGridTableRowSelectAll } from '@/components/ui/data-grid-table';
+import { DataGridPagination } from '@/components/ui/data-grid-pagination';
+import { DataGridColumnVisibility } from '@/components/ui/data-grid-column-visibility';
+import { useUIStore } from '@/stores/ui-store';
 
 import { usePageMeta } from '@/hooks/use-page-meta';
 import { useOnlineStatus } from '@/hooks/use-online-status';
@@ -96,6 +105,10 @@ const branchFormSchema = z.object({
 
 type BranchFormValues = z.infer<typeof branchFormSchema>;
 
+// ─── Column helper ────────────────────────────────────────────────────────────
+
+const columnHelper = createColumnHelper<FullBranchResponse>();
+
 // ─── Branch Form Dialog ───────────────────────────────────────────────────────
 
 function BranchFormDialog({
@@ -125,7 +138,7 @@ function BranchFormDialog({
   const form = useForm<BranchFormValues>({
     resolver: zodResolver(branchFormSchema),
     defaultValues: {
-      nameEn: branch?.nameEn ?? '',                // BUG FIX: no fallback to branch?.name
+      nameEn: branch?.nameEn ?? '',
       nameAr: branch?.nameAr ?? branch?.name ?? '',
       zoneName: (branch as any)?.zoneName ?? '',
       phone: branch?.phoneNumber ?? '',
@@ -164,7 +177,6 @@ function BranchFormDialog({
     },
   });
 
-  // Watch conditional fields
   const is24Hours = form.watch('is24Hours');
   const enableDelivery = form.watch('enableDeliveryOrders');
   const isFixed = form.watch('isFixedDelivery');
@@ -197,7 +209,6 @@ function BranchFormDialog({
             <ScrollArea className="h-[65vh]">
               <div className="space-y-4 pe-3 pb-2">
 
-                {/* Map section */}
                 <div className="space-y-2">
                   <LocationPicker
                     lat={lat}
@@ -211,7 +222,6 @@ function BranchFormDialog({
                   />
                 </div>
 
-                {/* Coverage radius */}
                 <FormField
                   control={form.control}
                   name="coverageRadius"
@@ -231,7 +241,6 @@ function BranchFormDialog({
                   )}
                 />
 
-                {/* Names side by side */}
                 {(showEnglish || showArabic) && (
                   <div className="grid grid-cols-2 gap-4">
                     {showEnglish && (
@@ -267,7 +276,6 @@ function BranchFormDialog({
                   </div>
                 )}
 
-                {/* Zone */}
                 <FormField
                   control={form.control}
                   name="zoneName"
@@ -282,7 +290,6 @@ function BranchFormDialog({
                   )}
                 />
 
-                {/* Phone */}
                 <FormField
                   control={form.control}
                   name="phone"
@@ -297,7 +304,6 @@ function BranchFormDialog({
                   )}
                 />
 
-                {/* Address */}
                 <FormField
                   control={form.control}
                   name="address"
@@ -312,7 +318,6 @@ function BranchFormDialog({
                   )}
                 />
 
-                {/* Lat / Lng */}
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
@@ -342,11 +347,9 @@ function BranchFormDialog({
                   />
                 </div>
 
-                {/* Working hours section */}
                 <div className="space-y-3 rounded-lg border border-border p-3">
                   <p className="text-sm font-medium">{t('branches.workingHours')}</p>
 
-                  {/* Open 24 Hours checkbox */}
                   <FormField
                     control={form.control}
                     name="is24Hours"
@@ -367,7 +370,6 @@ function BranchFormDialog({
                     )}
                   />
 
-                  {/* Time pickers (hidden when 24h) */}
                   {!is24Hours && (
                     <div className="grid grid-cols-2 gap-4">
                       <FormField
@@ -400,11 +402,9 @@ function BranchFormDialog({
                   )}
                 </div>
 
-                {/* Delivery section */}
                 <div className="space-y-3 rounded-lg border border-border p-3">
                   <p className="text-sm font-medium">{t('branches.deliverySettings')}</p>
 
-                  {/* Delivery Time */}
                   <FormField
                     control={form.control}
                     name="deliveryTime"
@@ -419,7 +419,6 @@ function BranchFormDialog({
                     )}
                   />
 
-                  {/* Enable Delivery Orders */}
                   <FormField
                     control={form.control}
                     name="enableDeliveryOrders"
@@ -440,7 +439,6 @@ function BranchFormDialog({
                     )}
                   />
 
-                  {/* Fixed Delivery (only when delivery enabled) */}
                   {enableDelivery && (
                     <FormField
                       control={form.control}
@@ -463,7 +461,6 @@ function BranchFormDialog({
                     />
                   )}
 
-                  {/* Delivery Charge (only when fixed delivery is on) */}
                   {enableDelivery && isFixed && (
                     <FormField
                       control={form.control}
@@ -484,7 +481,6 @@ function BranchFormDialog({
               </div>
             </ScrollArea>
 
-            {/* Footer outside scroll area */}
             <DialogFooter className="pt-4">
               <DialogClose asChild>
                 <Button type="button" variant="outline">
@@ -541,9 +537,7 @@ function DeleteBranchDialog({
             onClick={onConfirm}
             disabled={isPending}
           >
-            {isPending ? (
-              <LoaderCircle className="size-4 animate-spin" />
-            ) : null}
+            {isPending ? <LoaderCircle className="size-4 animate-spin" /> : null}
             {t('actions.delete')}
           </Button>
         </DialogFooter>
@@ -573,34 +567,121 @@ export default function BranchesPage() {
   const updateBranch = useUpdateBranch();
   const deleteBranch = useDeleteBranch();
 
+  const { confirm } = useUIStore();
   const [search, setSearch] = useState('');
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [createOpen, setCreateOpen] = useState(false);
   const [editBranch, setEditBranch] = useState<FullBranchResponse | undefined>();
-  const [deletingBranch, setDeletingBranch] = useState<
-    FullBranchResponse | undefined
-  >();
+  const [deletingBranch, setDeletingBranch] = useState<FullBranchResponse | undefined>();
 
-  // Client-side search filter
-  const filtered =
-    search.trim() === ''
-      ? branches
-      : branches.filter((b) => {
-          const q = search.toLowerCase();
+  const filtered = useMemo(() => {
+    if (search.trim() === '') return branches;
+    const q = search.toLowerCase();
+    return branches.filter((b) =>
+      b.name?.toLowerCase().includes(q) ||
+      b.nameEn?.toLowerCase().includes(q) ||
+      b.nameAr?.toLowerCase().includes(q) ||
+      b.phoneNumber?.toLowerCase().includes(q) ||
+      b.addressText?.toLowerCase().includes(q),
+    );
+  }, [branches, search]);
+
+  const columns = useMemo(
+    () => [
+      columnHelper.display({
+        id: 'select',
+        header: () => <DataGridTableRowSelectAll />,
+        cell: ({ row }) => <DataGridTableRowSelect row={row} />,
+        meta: { cellClassName: 'w-10' },
+      }),
+      columnHelper.accessor((row) => row.name ?? row.nameEn ?? row.nameAr ?? '', {
+        id: 'name',
+        header: t('branches.name'),
+        cell: ({ row }) => {
+          const b = row.original;
           return (
-            b.name?.toLowerCase().includes(q) ||
-            b.nameEn?.toLowerCase().includes(q) ||
-            b.nameAr?.toLowerCase().includes(q) ||
-            b.phoneNumber?.toLowerCase().includes(q) ||
-            b.addressText?.toLowerCase().includes(q)
+            <div className="flex items-center gap-2 font-medium">
+              {b.name ?? b.nameEn ?? b.nameAr ?? '—'}
+              {b.isMain && (
+                <Badge variant="secondary" size="sm">
+                  {t('branches.main')}
+                </Badge>
+              )}
+            </div>
           );
-        });
+        },
+        meta: { skeleton: <Skeleton className="h-4 w-32" /> },
+      }),
+      columnHelper.accessor('phoneNumber', {
+        header: t('branches.phone'),
+        cell: ({ getValue }) => getValue() ?? '—',
+        meta: { skeleton: <Skeleton className="h-4 w-24" /> },
+      }),
+      columnHelper.accessor('addressText', {
+        header: t('branches.address'),
+        cell: ({ getValue }) => (
+          <span className="text-muted-foreground">{getValue() ?? '—'}</span>
+        ),
+        meta: { skeleton: <Skeleton className="h-4 w-40" /> },
+      }),
+      columnHelper.display({
+        id: 'actions',
+        header: () => <div className="ltr:text-right rtl:text-left">{t('branches.actions')}</div>,
+        cell: ({ row }) => {
+          const branch = row.original;
+          return (
+            <div className="flex ltr:justify-end rtl:justify-start gap-1">
+              <Button
+                variant="ghost"
+                mode="icon"
+                size="sm"
+                onClick={() => setEditBranch(branch)}
+                aria-label={t('actions.edit')}
+              >
+                <Pencil className="size-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                mode="icon"
+                size="sm"
+                onClick={() => setDeletingBranch(branch)}
+                aria-label={t('actions.delete')}
+                disabled={branch.isMain}
+              >
+                <Trash2 className="size-4 text-destructive" />
+              </Button>
+            </div>
+          );
+        },
+        meta: { cellClassName: 'w-24' },
+      }),
+    ],
+    [t, setEditBranch, setDeletingBranch],
+  );
+
+  const table = useReactTable({
+    data: filtered,
+    columns,
+    getRowId: (row) => row.id,
+    state: { rowSelection, sorting, columnVisibility },
+    onRowSelectionChange: setRowSelection,
+    onSortingChange: setSorting,
+    onColumnVisibilityChange: setColumnVisibility,
+    enableRowSelection: (row) => !row.original.isMain,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    initialState: { pagination: { pageSize: 10 } },
+  });
 
   function buildInput(values: BranchFormValues): Omit<BranchInput, 'shopId'> {
     const is24h = values.is24Hours ?? false;
     const hasDelivery = values.enableDeliveryOrders ?? true;
     const isFixed = hasDelivery && (values.isFixedDelivery ?? false);
     return {
-      nameEn: values.nameEn ?? '',   // always include — API rejects missing field even though swagger marks nullable
+      nameEn: values.nameEn ?? '',
       nameAr: values.nameAr ?? '',
       zoneName: values.zoneName,
       phoneNumber: values.phone,
@@ -655,6 +736,27 @@ export default function BranchesPage() {
     }
   }
 
+  function handleDeleteSelected() {
+    const selectedRows = table.getSelectedRowModel().rows;
+    const count = selectedRows.length;
+    confirm({
+      title: t('actions.delete'),
+      description: t('branches.deleteSelectedConfirm', { count }),
+      variant: 'destructive',
+      onConfirm: async () => {
+        try {
+          for (const row of selectedRows) {
+            await deleteBranch.mutateAsync(row.original.id);
+          }
+          setRowSelection({});
+          if (!isOffline) toast.success(t('branches.deleteSelectedSuccess', { count }));
+        } catch {
+          toast.error(t('branches.deleteError'));
+        }
+      },
+    });
+  }
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -680,17 +782,29 @@ export default function BranchesPage() {
 
   return (
     <div className="min-w-0 space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-          <Input
-            className="pl-9"
-            placeholder={t('actions.search')}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+      {/* Search + Columns + Add */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <div className="relative w-44">
+            <Search className="absolute ltr:left-3 rtl:right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+            <Input
+              className="ltr:pl-9 rtl:pr-9 h-9"
+              placeholder={t('actions.search')}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <DataGridColumnVisibility
+            table={table}
+            trigger={
+              <Button variant="outline" size="sm" className="h-9 gap-1.5">
+                <Columns3 className="size-4" />
+                {t('logs.columns')}
+              </Button>
+            }
           />
         </div>
-        <Button onClick={() => setCreateOpen(true)} className="bg-brand hover:bg-brand/90 text-brand-foreground">
+        <Button size="sm" onClick={() => setCreateOpen(true)} className="h-9 bg-brand hover:bg-brand/90 text-brand-foreground">
           <Plus className="size-4" />
           {t('branches.add')}
         </Button>
@@ -708,72 +822,39 @@ export default function BranchesPage() {
         </div>
       )}
 
-      {/* Table */}
-      {branches.length > 0 && (
-        <div className="w-full overflow-x-auto rounded-lg border bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t('branches.name')}</TableHead>
-                <TableHead>{t('branches.phone')}</TableHead>
-                <TableHead>{t('branches.address')}</TableHead>
-                <TableHead className="text-right">{t('branches.actions')}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    className="text-center text-muted-foreground py-8"
-                  >
-                    {t('branches.noResults', { query: search })}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filtered.map((branch) => (
-                  <TableRow key={branch.id}>
-                    <TableCell className="font-medium">
-                      {branch.name ?? branch.nameEn ?? branch.nameAr ?? '—'}
-                      {branch.isMain && (
-                        <span className="ml-2 text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded">
-                          {t('branches.main')}
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell>{branch.phoneNumber ?? '—'}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {branch.addressText ?? '—'}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          mode="icon"
-                          size="sm"
-                          onClick={() => setEditBranch(branch)}
-                          aria-label={t('actions.edit')}
-                        >
-                          <Pencil className="size-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          mode="icon"
-                          size="sm"
-                          onClick={() => setDeletingBranch(branch)}
-                          aria-label={t('actions.delete')}
-                          disabled={branch.isMain}
-                        >
-                          <Trash2 className="size-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+      {/* Selection action bar */}
+      {table.getSelectedRowModel().rows.length > 0 && (
+        <div className="flex items-center justify-between rounded-lg border border-border bg-muted/40 px-4 py-2.5">
+          <span className="text-sm text-muted-foreground">
+            {t('branches.selectedCount', { count: table.getSelectedRowModel().rows.length })}
+          </span>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleDeleteSelected}
+            disabled={deleteBranch.isPending}
+          >
+            <Trash2 className="size-4" />
+            {t('actions.delete')} ({table.getSelectedRowModel().rows.length})
+          </Button>
         </div>
+      )}
+
+      {/* DataGrid */}
+      {branches.length > 0 && (
+        <DataGrid
+          table={table}
+          recordCount={filtered.length}
+          tableLayout={{ stripped: true, rowBorder: false, width: 'auto' }}
+        >
+          <DataGridContainer>
+            <DataGridTable />
+          </DataGridContainer>
+          <DataGridPagination
+            sizes={[10, 25, 50]}
+            className="px-4 py-3 border-t border-border"
+          />
+        </DataGrid>
       )}
 
       {/* Create Dialog */}

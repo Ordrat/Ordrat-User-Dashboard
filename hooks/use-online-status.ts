@@ -30,6 +30,9 @@ export function useOnlineStatus(): OnlineStatus {
   const [lastOnlineAt, setLastOnlineAt] = useState<number | null>(null);
   const isOfflineRef = useRef(typeof navigator !== 'undefined' ? !navigator.onLine : false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Debounce timer for the 'offline' event — navigation blips fire offline→online
+  // within milliseconds; we wait 2 s before actually declaring offline.
+  const offlineTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const update = async () => {
@@ -55,16 +58,28 @@ export function useOnlineStatus(): OnlineStatus {
     };
 
     const handleOnline = () => {
+      // Cancel any pending offline transition (navigation blip)
+      if (offlineTimerRef.current) {
+        clearTimeout(offlineTimerRef.current);
+        offlineTimerRef.current = null;
+      }
       update();
       startPolling();
     };
 
     const handleOffline = () => {
-      isOfflineRef.current = true;
-      setIsOffline(true);
-      onlineManager.setOnline(false);
-      // Stop polling while offline — no point hammering a dead network
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      // Debounce: wait 2 s before declaring offline so transient navigation
+      // blips (browser fires offline → online within ~50 ms) don't show the banner.
+      if (offlineTimerRef.current) clearTimeout(offlineTimerRef.current);
+      offlineTimerRef.current = setTimeout(() => {
+        offlineTimerRef.current = null;
+        if (typeof navigator !== 'undefined' && navigator.onLine) return; // already back
+        isOfflineRef.current = true;
+        setIsOffline(true);
+        onlineManager.setOnline(false);
+        // Stop polling while offline — no point hammering a dead network
+        if (intervalRef.current) clearInterval(intervalRef.current);
+      }, 2_000);
     };
 
     // Initial check on mount
@@ -76,6 +91,7 @@ export function useOnlineStatus(): OnlineStatus {
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
+      if (offlineTimerRef.current) clearTimeout(offlineTimerRef.current);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };

@@ -46,6 +46,17 @@ Frontend-only — all data via `.NET API` at `https://api.ordrat.com`. No Prisma
 
 **PWA precache (all pages)**: Every page added to the sidebar menu MUST have a corresponding entry in `ROUTE_API_ENDPOINTS` in `hooks/use-page-precache.ts`. List all API endpoints the page fetches. Use `() => []` for filter-driven or no-data pages. This applies to ALL dashboard sections, not just store-settings.
 
+**Add buttons in toolbars**: Every "Add" / create action button in a page toolbar MUST match the height of the adjacent filter controls. Use `size="sm"` with an explicit `h-*` class matching the other toolbar items (e.g. `h-9` when filters are `h-9`, `h-8` when selects are `h-8`). Always style with `bg-brand text-brand-foreground hover:bg-brand/90`. The Add button sits at the far end of the toolbar (justified to end), while search + column-visibility controls group together at the start.
+
+**DataGrid standard pattern**: Every dashboard data table MUST include all of the following:
+- **Pagination**: `getPaginationRowModel()` + `DataGridPagination` component (use `manualPagination: true` for server-side paging)
+- **Search**: text `Input` filtering the visible data client-side (or server-side param)
+- **Filters**: relevant column filters (date range, status, action type, etc.) in the filter bar
+- **Column visibility**: `VisibilityState` + `DataGridColumnVisibility` button in the toolbar
+- **Row selection for deletion**: `RowSelectionState` + `DataGridTableRowSelectAll` header + `DataGridTableRowSelect` cell + selection action bar with bulk-delete button (use `useUIStore().confirm`; skip for read-only tables)
+- **Filter bar sizing**: all filter/toolbar items use consistent `h-9` height; filter bar uses `flex flex-wrap items-center gap-2` so it reflows on mobile
+- **Column overflow**: use `tableLayout={{ width: 'auto' }}` so columns size to content; wrap long text cells in `truncate` or `whitespace-nowrap` as needed
+
 ---
 
 ## State — Decision Tree
@@ -162,10 +173,10 @@ After implement: `npx tsc --noEmit` → validate → merge to main.
 - Empty `shopId` after login → redirect to `https://ordrat.com/seller-setup?sellerId=<id>`
 
 ## Recent Changes
+- 006-qr-templates-mobile-fixes: Added TypeScript 5.x + Next.js 16.x (App Router), React 19, TanStack Query 5.x, Tailwind CSS 4.x, qr-code-styling, ReUI/Metronic 9
 - 005-store-settings-extensions: Added TypeScript 5.x + Next.js 16.x (App Router), React 19, TanStack Query 5.x, React Hook Form + Zod, `qr-code-styling` (new)
 - 004-pwa-offline-resilience: IndexedDB offline queue, SW cache clear on sign-out, mount-time queue flush, `_entityType`/`_entityId` deduplication
-- 003-pwa-offline-caching: Serwist + @serwist/next, StaleWhileRevalidate for API GETs
 
 ## Active Technologies
-- TypeScript 5.x + Next.js 16.x (App Router), React 19, TanStack Query 5.x, React Hook Form + Zod, `qr-code-styling` (new) (005-store-settings-extensions)
-- N/A — frontend-only, all data via .NET API at `api.ordrat.com` (005-store-settings-extensions)
+- TypeScript 5.x + Next.js 16.x (App Router), React 19, TanStack Query 5.x, Tailwind CSS 4.x, qr-code-styling, ReUI/Metronic 9 (006-qr-templates-mobile-fixes)
+- N/A (client-side only; images served from `public/`) (006-qr-templates-mobile-fixes)

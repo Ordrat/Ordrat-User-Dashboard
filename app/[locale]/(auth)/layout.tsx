@@ -70,7 +70,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           </Link>
 
           <div className="flex items-center gap-2">
-            <Button mode="icon" variant="outline" onClick={toggleTheme} aria-label={t('header.themeToggle')}>
+            <Button mode="icon" variant="ghost" onClick={toggleTheme} aria-label={t('header.themeToggle')} className="text-muted-foreground hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-foreground">
               {activeTheme === 'light' ? <Moon /> : <Sun />}
             </Button>
             <LanguageSwitcher />
@@ -96,7 +96,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           <div className="relative order-2 flex justify-center items-start px-6 pb-8 pt-4 sm:px-8 sm:pb-10 lg:order-1 lg:items-center lg:p-10">
             <div className="absolute inset-x-0 top-0 hidden lg:flex justify-end px-10 py-8 xl:px-12">
               <div className="flex items-center gap-2">
-                <Button mode="icon" variant="outline" onClick={toggleTheme} aria-label={t('header.themeToggle')}>
+                <Button mode="icon" variant="ghost" onClick={toggleTheme} aria-label={t('header.themeToggle')} className="text-muted-foreground hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-foreground">
                   {activeTheme === 'light' ? <Moon /> : <Sun />}
                 </Button>
                 <LanguageSwitcher />
@@ -108,12 +108,12 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
                 <CardContent className="p-6">{children}</CardContent>
               </Card>
               <div className="pt-4 text-center text-sm text-muted-foreground lg:hidden">
-                &copy; 2026 <AuthBrandText text="Ordrat" />. All rights reserved.
+                &copy; 2026 <AuthBrandText text="Ordrat" />. {t('auth.allRightsReserved')}
               </div>
             </div>
 
             <div className="absolute bottom-8 inset-x-0 hidden lg:block text-center text-sm text-muted-foreground">
-              &copy; 2026 <AuthBrandText text="Ordrat" />. All rights reserved.
+              &copy; 2026 <AuthBrandText text="Ordrat" />. {t('auth.allRightsReserved')}
             </div>
           </div>
 

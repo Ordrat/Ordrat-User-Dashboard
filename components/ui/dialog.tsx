@@ -72,7 +72,7 @@ function DialogContent({
       >
         {children}
         {showCloseButton && (
-          <DialogClose className="cursor-pointer outline-0 absolute end-5 top-5 rounded-sm opacity-60 ring-offset-background transition-opacity hover:opacity-100 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+          <DialogClose className="cursor-pointer outline-0 absolute end-5 top-5 rounded-sm text-zinc-400 transition-colors hover:text-zinc-700 hover:bg-zinc-100 dark:text-zinc-500 dark:hover:text-zinc-200 dark:hover:bg-zinc-700 focus:outline-hidden disabled:pointer-events-none">
             <X className="size-4" />
             <span className="sr-only">Close</span>
           </DialogClose>

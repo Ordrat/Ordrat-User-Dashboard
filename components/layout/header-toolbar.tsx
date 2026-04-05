@@ -6,7 +6,10 @@ import {
   Sun,
   Moon,
   Bell,
+  Maximize,
+  Minimize,
 } from "lucide-react";
+import { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input, InputWrapper } from "@/components/ui/input";
 import { useLayout } from "./context";
@@ -41,6 +44,7 @@ export function HeaderToolbar() {
   const params = useParams();
   const locale = (params?.locale as string) ?? 'en';
   const { t } = useTranslation('common');
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const userName = session?.user?.name ?? 'User';
   const userEmail = session?.user?.email ?? '';
@@ -48,23 +52,96 @@ export function HeaderToolbar() {
 
   const handleInputChange = () => {};
 
+  useEffect(() => {
+    const fullscreenDocument = document as Document & {
+      webkitFullscreenElement?: Element | null;
+    };
+
+    const syncFullscreen = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement || fullscreenDocument.webkitFullscreenElement));
+    };
+
+    syncFullscreen();
+
+    document.addEventListener('fullscreenchange', syncFullscreen);
+    document.addEventListener('webkitfullscreenchange', syncFullscreen as EventListener);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', syncFullscreen);
+      document.removeEventListener('webkitfullscreenchange', syncFullscreen as EventListener);
+    };
+  }, []);
+
   const toggleTheme = () => {
     setTheme(theme === "light" ? "dark" : "light");
   };
 
+  async function toggleFullscreen() {
+    const fullscreenDocument = document as Document & {
+      webkitExitFullscreen?: () => Promise<void> | void;
+      webkitFullscreenElement?: Element | null;
+    };
+
+    if (document.fullscreenElement || fullscreenDocument.webkitFullscreenElement) {
+      if (document.exitFullscreen) {
+        await document.exitFullscreen();
+        return;
+      }
+
+      await fullscreenDocument.webkitExitFullscreen?.();
+      return;
+    }
+
+    const root = document.documentElement as HTMLElement & {
+      webkitRequestFullscreen?: () => Promise<void> | void;
+    };
+
+    if (root.requestFullscreen) {
+      await root.requestFullscreen();
+      return;
+    }
+
+    await root.webkitRequestFullscreen?.();
+  }
+
   return (
     <nav className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-
-      <Button mode="icon" variant="outline">
-        <Bell />
+      <Button
+        mode="icon"
+        variant="ghost"
+        onClick={toggleFullscreen}
+        className="text-muted-foreground hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-foreground focus-visible:bg-zinc-200 dark:focus-visible:bg-zinc-800 focus-visible:text-foreground"
+        aria-label={isFullscreen ? t('actions.exitFullscreen') : t('actions.enterFullscreen')}
+        title={isFullscreen ? t('actions.exitFullscreen') : t('actions.enterFullscreen')}
+      >
+        {isFullscreen ? <Minimize className="size-4.5" /> : <Maximize className="size-4.5" />}
       </Button>
+      
+      <Button
+        mode="icon"
+        variant="ghost"
+        className="text-muted-foreground hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-foreground focus-visible:bg-zinc-200 dark:focus-visible:bg-zinc-800 focus-visible:text-foreground"
+      >
+        <Bell className="size-4.5" />
+      </Button>
+
+      
 
 
       <LanguageSwitcher />
 
-      <Button mode="icon" variant="outline" onClick={toggleTheme}>
-        {mounted ? (theme === 'light' ? <Moon /> : <Sun />) : <span aria-hidden className="size-4" />}
-      </Button>
+      <button
+        type="button"
+        onClick={toggleTheme}
+        aria-label={theme === 'light' ? t('theme.dark') : t('theme.light')}
+        className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-foreground focus-visible:outline-hidden focus-visible:bg-zinc-200 dark:focus-visible:bg-zinc-800 focus-visible:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
+      >
+        {mounted ? (
+          theme === 'light' ? <Moon className="size-4.5" /> : <Sun className="size-4.5" />
+        ) : (
+          <span aria-hidden className="size-4" />
+        )}
+      </button>
       {!isMobile && (
         <InputWrapper className="w-full lg:w-40">
           <Search />

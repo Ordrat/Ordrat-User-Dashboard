@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Languages } from 'lucide-react';
 
 export function LanguageSwitcher() {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -22,13 +22,15 @@ export function LanguageSwitcher() {
   }
 
   return (
-    <Button variant="outline" onClick={handleToggle} className="h-9 gap-1.5 px-2.5 text-sm font-medium">
-      <Languages className="size-5" />
-      {isArabic ? (
-        <span>English</span>
-      ) : (
-        <span style={{ fontFamily: 'var(--font-almarai)' }}>العربية</span>
-      )}
+    <Button
+      variant="ghost"
+      mode="icon"
+      onClick={handleToggle}
+      aria-label={t('language.switchTo')}
+      title={t('language.switchTo')}
+      className="text-muted-foreground hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-foreground focus-visible:bg-zinc-200 dark:focus-visible:bg-zinc-800 focus-visible:text-foreground"
+    >
+      <Languages className="size-4.5" />
     </Button>
   );
 }

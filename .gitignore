@@ -54,6 +54,10 @@ public/sw.js.map
 public/workbox-*.js
 public/workbox-*.js.map
 
+# QR template source SVGs — large files (~50-80 MB each), accessed server-side only at runtime
+# Thumbnails (public/QR-templates/thumbnails/) are committed separately
+public/QR-templates/*.svg
+
 # Swagger snapshot — regenerate with: npm run swagger:sync
 # Intentionally NOT ignored so Claude Code can read it offline
 # lib/ordrat-api/swagger.json

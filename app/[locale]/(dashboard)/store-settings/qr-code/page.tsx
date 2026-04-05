@@ -6,11 +6,12 @@ import { useParams } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import {
   ArrowUpRight,
+  CircleCheck,
   Copy,
+  Download,
   Eraser,
   Palette,
   QrCode,
-  ScanLine,
   Sparkles,
   Undo2,
   LoaderCircle,
@@ -18,10 +19,13 @@ import {
 import QRCodeStyling, { type Options as QROptions } from 'qr-code-styling';
 import { toast } from 'sonner';
 
+import { downloadTemplate } from '@/lib/qr-templates/composit';
+import { TemplatePicker } from './template-picker';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -56,16 +60,27 @@ const COLOR_PRESETS: ColorPreset[] = [
 
 const DEFAULT_STYLE: QRStyle = 'rounded';
 const DEFAULT_FOREGROUND = '#991b1b';
-const DEFAULT_MARGIN = 14;
+const DEFAULT_MARGIN = 24;
 const DEFAULT_LOGO_SCALE = 0.26;
-const DEFAULT_ROUNDNESS = 2;
+const DEFAULT_ROUNDNESS = 50;
 
-const ROUNDNESS_STYLES = [
-  { dots: 'rounded', cornersSquare: 'square', cornersDot: 'square' },
-  { dots: 'rounded', cornersSquare: 'extra-rounded', cornersDot: 'dot' },
-  { dots: 'extra-rounded', cornersSquare: 'extra-rounded', cornersDot: 'dot' },
-  { dots: 'classy-rounded', cornersSquare: 'extra-rounded', cornersDot: 'dot' },
-] as const;
+// Roundness is now 0-100 continuous; map to discrete QR styles at render time
+// For classic: controls dot refinement (dots vs classy vs classy-rounded)
+// For rounded/logo: controls corner softness
+function getRoundnessStyle(value: number, isClassic: boolean) {
+  if (isClassic) {
+    // Classic mode: refine the line dots themselves
+    if (value < 33) return { dots: 'square', cornersSquare: 'square', cornersDot: 'square' } as const;
+    if (value < 67) return { dots: 'classy', cornersSquare: 'square', cornersDot: 'square' } as const;
+    return { dots: 'classy-rounded', cornersSquare: 'square', cornersDot: 'square' } as const;
+  }
+  
+  // Rounded/logo mode: control corner softness
+  if (value < 25) return { dots: 'square', cornersSquare: 'square', cornersDot: 'square' } as const;
+  if (value < 50) return { dots: 'rounded', cornersSquare: 'square', cornersDot: 'square' } as const;
+  if (value < 75) return { dots: 'rounded', cornersSquare: 'extra-rounded', cornersDot: 'dot' } as const;
+  return { dots: 'extra-rounded', cornersSquare: 'extra-rounded', cornersDot: 'dot' } as const;
+}
 
 export default function QRCodePage() {
   const { t } = useTranslation('common');
@@ -85,6 +100,8 @@ export default function QRCodePage() {
   const [logoScale, setLogoScale] = useState(DEFAULT_LOGO_SCALE);
   const [roundness, setRoundness] = useState(DEFAULT_ROUNDNESS);
   const [previousDesign, setPreviousDesign] = useState<QRDesignState | null>(null);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<1 | 2 | 3 | 4>(1);
+  const [downloadingId, setDownloadingId] = useState<1 | 2 | 3 | 4 | null>(null);
 
   const qrRef = useRef<HTMLDivElement>(null);
   const qrInstance = useRef<QRCodeStyling | null>(null);
@@ -107,10 +124,10 @@ export default function QRCodePage() {
   }
 
   function buildQROptions(): QROptions {
-    const roundedStyle = ROUNDNESS_STYLES[roundness] ?? ROUNDNESS_STYLES[DEFAULT_ROUNDNESS];
+    const roundedStyle = getRoundnessStyle(roundness, selectedStyle === 'classic');
     const base: QROptions = {
-      width: 288,
-      height: 288,
+      width: 320,
+      height: 320,
       data: shopUrl ?? 'https://ordrat.com',
       margin,
       qrOptions: { errorCorrectionLevel: selectedStyle === 'logo' ? 'H' : 'M' },
@@ -121,7 +138,12 @@ export default function QRCodePage() {
     };
 
     if (selectedStyle === 'classic') {
-      return base;
+      return {
+        ...base,
+        dotsOptions: { color: fgColor, type: roundedStyle.dots },
+        cornersSquareOptions: { color: fgColor, type: roundedStyle.cornersSquare },
+        cornersDotOptions: { color: fgColor, type: roundedStyle.cornersDot },
+      };
     }
 
     if (selectedStyle === 'rounded') {
@@ -152,9 +174,13 @@ export default function QRCodePage() {
 
     const options = buildQROptions();
 
-    qrRef.current.innerHTML = '';
-    qrInstance.current = new QRCodeStyling(options);
-    qrInstance.current.append(qrRef.current);
+    if (!qrInstance.current) {
+      qrRef.current.innerHTML = '';
+      qrInstance.current = new QRCodeStyling(options);
+      qrInstance.current.append(qrRef.current);
+    } else {
+      qrInstance.current.update(options);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shopUrl, selectedStyle, fgColor, margin, logoScale, logoUrl, roundness]);
 
@@ -202,6 +228,19 @@ export default function QRCodePage() {
     qrInstance.current?.download({ extension: 'svg', name: 'shop-qr' });
   }
 
+  async function handleTemplateDownload(templateId: 1 | 2 | 3 | 4) {
+    if (!shopUrl || downloadingId !== null) return;
+    setSelectedTemplateId(templateId);
+    setDownloadingId(templateId);
+    try {
+      await downloadTemplate(templateId, buildQROptions(), shopUrl, logoUrl);
+    } catch {
+      toast.error(t('qrCode.downloadError'));
+    } finally {
+      setDownloadingId(null);
+    }
+  }
+
   function applyPreset(preset: ColorPreset) {
     applyDesign({
       ...currentDesign,
@@ -241,11 +280,13 @@ export default function QRCodePage() {
   return (
     <div className="space-y-6 p-6">
       <section className="relative overflow-hidden rounded-[28px] border border-border/70 bg-card p-6 shadow-sm shadow-black/5 md:p-7">
-        <Badge className="absolute top-6 inset-e-6 inline-flex items-center gap-2 rounded-full border border-foreground/10 bg-background px-3 py-1 text-[0.72rem] font-medium text-foreground shadow-xs shadow-black/10 hover:bg-background">
-          <span className="relative flex size-2.5">
-            <span className="absolute inset-0 rounded-full bg-emerald-500/70 animate-ping" />
-            <span className="relative rounded-full bg-emerald-600 size-2.5" />
-          </span>
+        <Badge
+          variant="success"
+          appearance="light"
+          size="sm"
+          className="absolute top-6 inset-e-6 h-5 gap-1 px-1.5 font-medium shadow-xs shadow-black/10"
+        >
+          <CircleCheck className="size-3" aria-hidden="true" />
           {t('qrCode.metricReady')}
         </Badge>
         <div className="space-y-5">
@@ -274,41 +315,28 @@ export default function QRCodePage() {
         </div>
       </section>
 
-      <div className="grid gap-7 xl:grid-cols-[minmax(0,1fr)_25rem]">
-        <div className="space-y-6">
-          <Card className="border-border/70 shadow-sm shadow-black/5">
-            <CardHeader className="space-y-3 px-6 pt-6 md:px-7 md:pt-7">
-              <div className="flex flex-col gap-5">
-                <div className="space-y-3">
-                  <CardTitle>{t('qrCode.controlsTitle')}</CardTitle>
-                  <CardDescription>{t('qrCode.controlsDescription')}</CardDescription>
-                </div>
-              </div>
+      <div className="grid items-stretch gap-5 xl:grid-cols-[minmax(0,1fr)_24rem]">
+        <Card className="min-w-0 flex flex-col border-border/70 shadow-sm shadow-black/5">
+            <CardHeader className="px-5 pb-3 pt-5 md:px-6 md:pt-6 xl:h-16">
+              <CardTitle>{t('qrCode.controlsTitle')}</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6 px-6 pb-6 md:px-7 md:pb-7">
-              <Tabs defaultValue="design" className="space-y-5">
+            <CardContent className="flex-1 space-y-4 px-5 pb-5 md:px-6 md:pb-6">
+              <Tabs defaultValue="design" className="space-y-4">
                 <div className="flex flex-wrap items-center gap-2 rounded-full bg-muted/50 p-1.5">
                   <TabsList variant="button" shape="pill" className="flex-wrap bg-transparent p-0">
                     <TabsTrigger
                       value="design"
-                      className="hover:bg-slate-200 hover:text-foreground focus-visible:ring-brand/25 data-[state=active]:bg-brand data-[state=active]:text-brand-foreground data-[state=active]:shadow-none [&:hover_svg]:text-foreground [&[data-state=active]_svg]:text-brand-foreground"
+                      className="hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-foreground focus-visible:ring-brand/25 data-[state=active]:bg-brand data-[state=active]:text-brand-foreground data-[state=active]:shadow-none [&:hover_svg]:text-foreground [&[data-state=active]_svg]:text-brand-foreground"
                     >
                       <Sparkles className="size-4" />
                       {t('qrCode.tabDesign')}
                     </TabsTrigger>
                     <TabsTrigger
                       value="colors"
-                      className="hover:bg-slate-200 hover:text-foreground focus-visible:ring-brand/25 data-[state=active]:bg-brand data-[state=active]:text-brand-foreground data-[state=active]:shadow-none [&:hover_svg]:text-foreground [&[data-state=active]_svg]:text-brand-foreground"
+                      className="hover:bg-zinc-200 dark:hover:bg-zinc-800 focus-visible:ring-brand/25 data-[state=active]:bg-brand data-[state=active]:text-brand-foreground data-[state=active]:shadow-none [&:hover_svg]:text-foreground [&[data-state=active]_svg]:text-brand-foreground"
                     >
                       <Palette className="size-4" />
                       {t('qrCode.tabColors')}
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="refine"
-                      className="hover:bg-slate-200 hover:text-foreground focus-visible:ring-brand/25 data-[state=active]:bg-brand data-[state=active]:text-brand-foreground data-[state=active]:shadow-none [&:hover_svg]:text-foreground [&[data-state=active]_svg]:text-brand-foreground"
-                    >
-                      <ScanLine className="size-4" />
-                      {t('qrCode.tabRefine')}
                     </TabsTrigger>
                   </TabsList>
                   <div className="ms-auto flex items-center gap-1">
@@ -354,7 +382,7 @@ export default function QRCodePage() {
                   </div>
                 </div>
 
-                <TabsContent value="design" className="space-y-6 pt-1">
+                <TabsContent value="design" className="space-y-4 pt-1">
                   <div className="grid gap-4 md:grid-cols-3">
                     {(['classic', 'rounded', 'logo'] as QRStyle[]).map((style) => (
                       <button
@@ -362,18 +390,16 @@ export default function QRCodePage() {
                         type="button"
                         onClick={() => applyDesign({ ...currentDesign, selectedStyle: style })}
                         className={cn(
-                          'rounded-2xl border p-4 text-left transition-all focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand/20 focus-visible:ring-offset-2',
+                          'rounded-2xl border-2 p-4 text-left transition-all focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-foreground/20 focus-visible:ring-offset-2',
                           selectedStyle === style
-                            ? 'border-brand/20 bg-muted shadow-sm shadow-brand/8'
-                            : 'border-border/70 bg-muted/35 hover:border-brand/10 hover:bg-accent',
+                            ? 'border-foreground bg-card shadow-sm'
+                            : 'border-transparent bg-card hover:border-foreground/20 hover:bg-muted',
                         )}
                       >
                         <span
                           className={cn(
                             'text-sm font-medium leading-4',
-                            selectedStyle === style
-                              ? 'text-brand'
-                              : 'text-foreground',
+                            selectedStyle === style ? 'text-foreground' : 'text-muted-foreground',
                           )}
                         >
                           {t(`qrCode.style${style.charAt(0).toUpperCase() + style.slice(1)}` as never)}
@@ -382,32 +408,106 @@ export default function QRCodePage() {
                     ))}
                   </div>
 
-                  <Separator />
+                  <div className="space-y-4">
+                    {selectedStyle === 'logo' ? (
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <SettingRow
+                          label={t('qrCode.cornerSoftness')}
+                          value={roundness >= 50 ? t('qrCode.styleRounded') : t('qrCode.styleClassic')}
+                          helper={t('qrCode.cornerSoftnessHelp')}
+                          showHelper={false}
+                          showValue={false}
+                        >
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className={cn(
+                                'h-9 rounded-xl',
+                                roundness < 50 && 'border-brand bg-brand/10 text-brand',
+                              )}
+                              onClick={() => applyDesign({ ...currentDesign, roundness: 0 })}
+                            >
+                              {t('qrCode.styleClassic')}
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className={cn(
+                                'h-9 rounded-xl',
+                                roundness >= 50 && 'border-brand bg-brand/10 text-brand',
+                              )}
+                              onClick={() => applyDesign({ ...currentDesign, roundness: 75 })}
+                            >
+                              {t('qrCode.styleRounded')}
+                            </Button>
+                          </div>
+                        </SettingRow>
 
-                  <div className="space-y-5">
-                    <SettingRow
-                      label={t('qrCode.padding')}
-                      value={`${margin}px`}
-                      helper={t('qrCode.paddingHelp')}
-                    >
-                      <Slider
-                        value={[margin]}
-                        min={0}
-                        max={24}
-                        step={2}
-                        onValueChange={(value) =>
-                          applyDesign({
-                            ...currentDesign,
-                            margin: value[0] ?? DEFAULT_MARGIN,
-                          })}
+                        <SettingRow
+                          label={t('qrCode.logoScale')}
+                          value={logoScale <= 0.24 ? t('qrCode.logoSizeSmall') : t('qrCode.logoSizeMedium')}
+                          helper={logoUrl ? t('qrCode.logoScaleHelp') : t('qrCode.logoMissing')}
+                          showHelper={false}
+                          showValue={false}
+                        >
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className={cn(
+                                'h-9 rounded-xl',
+                                logoScale <= 0.24 && 'border-brand bg-brand/10 text-brand',
+                              )}
+                              onClick={() => applyDesign({ ...currentDesign, logoScale: 0.22 })}
+                              disabled={!logoUrl}
+                            >
+                              {t('qrCode.logoSizeSmall')}
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className={cn(
+                                'h-9 rounded-xl',
+                                logoScale > 0.24 && 'border-brand bg-brand/10 text-brand',
+                              )}
+                              onClick={() => applyDesign({ ...currentDesign, logoScale: 0.28 })}
+                              disabled={!logoUrl}
+                            >
+                              {t('qrCode.logoSizeMedium')}
+                            </Button>
+                          </div>
+                        </SettingRow>
+                      </div>
+                    ) : (
+                      <SettingRow
+                        label={selectedStyle === 'classic' ? t('qrCode.lineRefinement') : t('qrCode.cornerSoftness')}
+                        value={`${roundness}%`}
+                        helper={selectedStyle === 'classic' ? t('qrCode.lineRefinementHelp') : t('qrCode.cornerSoftnessHelp')}
                       >
-                        <SliderThumb />
-                      </Slider>
-                    </SettingRow>
+                        <Slider
+                          value={[roundness]}
+                          min={0}
+                          max={100}
+                          step={1}
+                          onValueChange={(value) =>
+                            applyDesign({
+                              ...currentDesign,
+                              roundness: value[0] ?? DEFAULT_ROUNDNESS,
+                            })}
+                        >
+                          <SliderThumb />
+                        </Slider>
+                      </SettingRow>
+                    )}
                   </div>
                 </TabsContent>
 
-                <TabsContent value="colors" className="space-y-6 pt-1">
+                <TabsContent value="colors" className="space-y-4 pt-1">
                   <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                     {COLOR_PRESETS.map((preset) => (
                       <button
@@ -440,90 +540,45 @@ export default function QRCodePage() {
                   </div>
                 </TabsContent>
 
-                <TabsContent value="refine" className="space-y-6 pt-1">
-                  <div className="space-y-5">
-                    <SettingRow
-                      label={t('qrCode.cornerSoftness')}
-                      value={`${Math.round((roundness / (ROUNDNESS_STYLES.length - 1)) * 100)}%`}
-                      helper={t('qrCode.cornerSoftnessHelp')}
-                    >
-                      <Slider
-                        value={[roundness]}
-                        min={0}
-                        max={ROUNDNESS_STYLES.length - 1}
-                        step={1}
-                        disabled={selectedStyle === 'classic'}
-                        onValueChange={(value) =>
-                          applyDesign({
-                            ...currentDesign,
-                            roundness: value[0] ?? DEFAULT_ROUNDNESS,
-                          })}
-                      >
-                        <SliderThumb />
-                      </Slider>
-                    </SettingRow>
-
-                    {selectedStyle === 'logo' ? (
-                      <SettingRow
-                        label={t('qrCode.logoScale')}
-                        value={`${Math.round(logoScale * 100)}%`}
-                        helper={logoUrl ? t('qrCode.logoScaleHelp') : t('qrCode.logoMissing')}
-                      >
-                        <Slider
-                          value={[logoScale]}
-                          min={0.18}
-                          max={0.35}
-                          step={0.01}
-                          disabled={!logoUrl}
-                          onValueChange={(value) =>
-                            applyDesign({
-                              ...currentDesign,
-                              logoScale: value[0] ?? DEFAULT_LOGO_SCALE,
-                            })}
-                        >
-                          <SliderThumb />
-                        </Slider>
-                      </SettingRow>
-                    ) : null}
-
-                    <div className="space-y-3 rounded-2xl border border-border/70 bg-card p-4">
-                      <p className="text-sm font-medium text-foreground">{t('qrCode.scanTipsTitle')}</p>
-                      <div className="space-y-2 text-sm leading-6 text-muted-foreground">
-                        <p>{t('qrCode.scanTipContrast')}</p>
-                        <p>{t('qrCode.scanTipPadding')}</p>
-                        <p>{t('qrCode.scanTipLogo')}</p>
-                      </div>
-                    </div>
-                  </div>
-                </TabsContent>
               </Tabs>
             </CardContent>
-          </Card>
-        </div>
 
-        <div className="xl:sticky xl:top-6 xl:self-start">
-          <Card className="overflow-hidden border-border/70 shadow-sm shadow-black/5">
-            <CardHeader className="space-y-3 border-b border-border/70 bg-muted/20 px-6 pt-6 md:px-7 md:pt-7">
-              <div className="flex items-start justify-between gap-6">
-                <div className="space-y-3">
-                  <CardTitle>{t('qrCode.preview')}</CardTitle>
-                  <CardDescription>{t('qrCode.previewDescription')}</CardDescription>
-                </div>
-                <Badge className="ml-4 h-auto max-w-34 shrink-0 self-start whitespace-normal bg-brand px-2.5 py-1.5 text-left leading-4 text-brand-foreground hover:bg-brand md:ml-6">
-                  {t(`qrCode.style${selectedStyle.charAt(0).toUpperCase() + selectedStyle.slice(1)}` as never)}
-                </Badge>
+            {/* Print Templates section */}
+            <div className="mt-auto">
+              <div className="border-b border-border/70 px-5 pb-3 pt-5 md:px-6 md:pt-6 xl:h-16">
+                <CardTitle>{t('qrCode.downloadTemplates')}</CardTitle>
               </div>
+              <div className="px-5 pb-5 pt-5 md:px-6 md:pb-6">
+                <TemplatePicker
+                  selectedId={selectedTemplateId}
+                  onSelect={setSelectedTemplateId}
+                  onDownload={handleTemplateDownload}
+                  downloadingId={downloadingId}
+                  disabled={!shopUrl}
+                  disabledTooltip={t('qrCode.templateDisabledTooltip')}
+                />
+              </div>
+            </div>
+        </Card>
+
+        <div className="xl:sticky xl:top-6 xl:self-stretch">
+          <Card className="flex flex-col h-full overflow-hidden border-border/70 shadow-sm shadow-black/5">
+            <CardHeader className="border-b border-border/70 bg-muted/20 px-5 pb-3 pt-5 md:px-6 md:pt-6 xl:h-16">
+              <CardTitle>{t('qrCode.preview')}</CardTitle>
+              <Badge className="h-auto max-w-34 shrink-0 whitespace-normal bg-brand px-2.5 py-1.5 text-left leading-4 text-brand-foreground hover:bg-brand">
+                {t(`qrCode.style${selectedStyle.charAt(0).toUpperCase() + selectedStyle.slice(1)}` as never)}
+              </Badge>
             </CardHeader>
-            <CardContent className="space-y-6 px-6 pb-6 pt-6 md:px-7 md:pb-7">
-              <div className="space-y-5">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <CardContent className="flex-1 space-y-4 px-5 pb-5 pt-5 md:px-6 md:pb-6">
+              <div className="space-y-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('qrCode.domain')}</p>
                     <p className="font-mono text-sm leading-6 text-foreground">{shopUrl}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-center overflow-hidden rounded-4xl border border-border/60 bg-muted/35 p-6 shadow-inner shadow-black/5 sm:p-8 md:p-10">
+                <div className="flex items-center justify-center overflow-hidden rounded-2xl border border-border/60 bg-muted/35 shadow-inner shadow-black/5">
                   <div ref={qrRef} className="[&_canvas]:h-auto [&_canvas]:max-w-full [&_svg]:h-auto [&_svg]:max-w-full" />
                 </div>
               </div>
@@ -546,6 +601,7 @@ export default function QRCodePage() {
           </Card>
         </div>
       </div>
+
     </div>
   );
 }
@@ -565,8 +621,9 @@ function ExportTypeButton({
       variant="outline"
       onClick={onClick}
       disabled={disabled}
-      className="h-11 rounded-2xl bg-card px-3 text-sm font-medium"
+      className="h-9 rounded-xl bg-card px-3 text-xs font-medium"
     >
+      <Download className="size-4" />
       {label}
     </Button>
   );
@@ -576,23 +633,29 @@ function SettingRow({
   label,
   value,
   helper,
+  showHelper = true,
+  showValue = true,
   children,
 }: {
   label: string;
   value: string;
   helper: string;
+  showHelper?: boolean;
+  showValue?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <div className="space-y-3 rounded-2xl border border-border/70 bg-card p-5">
+    <div className="space-y-3 rounded-2xl border border-border/70 bg-card p-4">
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-sm font-medium text-foreground">{label}</p>
-          <p className="text-xs text-muted-foreground">{helper}</p>
+          {showHelper ? <p className="text-xs text-muted-foreground">{helper}</p> : null}
         </div>
-        <Badge variant="outline" className="rounded-full px-3 py-1 font-mono text-xs">
-          {value}
-        </Badge>
+        {showValue ? (
+          <Badge variant="outline" className="rounded-full px-3 py-1 font-mono text-xs">
+            {value}
+          </Badge>
+        ) : null}
       </div>
       {children}
     </div>

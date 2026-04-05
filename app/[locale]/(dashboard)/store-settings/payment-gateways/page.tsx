@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useForm, UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Banknote, Building2, type LucideIcon, Wallet, LoaderCircle } from 'lucide-react';
+import { Banknote, Building2, CircleCheck, type LucideIcon, Wallet, LoaderCircle, Settings } from 'lucide-react';
 import { z } from 'zod';
 import { toast } from 'sonner';
 
@@ -201,7 +201,7 @@ export default function PaymentGatewaysPage() {
       ) : isError ? (
         <div className="text-center text-destructive py-16">{t('paymentGateways.loadError')}</div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {PAYMENT_METHODS.map((method) => (
             <PaymentMethodCard
               key={method}
@@ -260,55 +260,74 @@ function PaymentMethodCard({
   onConfigure: () => void;
   isPending: boolean;
 }) {
-  const isConfigured = !!gateway;
   const methodName = t(`paymentGateways.method${method}` as never);
   const configuredName = gateway?.gatewayNameEn || gateway?.gatewayNameAr || null;
-  const description = gateway?.gatewayDescriptionEn || gateway?.gatewayDescriptionAr || null;
   const showMethodLabel = Boolean(configuredName && configuredName.trim() && configuredName !== methodName);
   const name = showMethodLabel ? configuredName : methodName;
+  const statusLabel = gateway
+    ? gateway.isEnabled
+      ? t('paymentGateways.enabled')
+      : t('paymentGateways.disabled')
+    : t('paymentGateways.notConfigured');
+  const statusBadgeVariant = gateway
+    ? gateway.isEnabled
+      ? 'success'
+      : 'destructive'
+    : 'warning';
+  const gatewayDescription = t(`paymentGateways.method${method}Desc` as never);
 
   return (
-    <Card className="flex flex-col">
-      <CardContent className="p-4 flex flex-col gap-2.5 flex-1">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-h-6">
-            {gateway ? (
-              <Badge variant={gateway.isEnabled ? 'success' : 'secondary'} className="text-xs">
-                {gateway.isEnabled ? t('paymentGateways.enabled') : t('paymentGateways.disabled')}
-              </Badge>
-            ) : null}
-          </div>
-          <Badge variant="outline" className="text-xs shrink-0">
-            {isConfigured ? t('paymentGateways.configured') : t('paymentGateways.notConfigured')}
-          </Badge>
-        </div>
-
-        <div className="flex flex-col items-center text-center gap-2">
+    <Card className="flex flex-col rounded-2xl border border-border/70 bg-card shadow-sm shadow-black/5">
+      <CardContent className="flex flex-1 flex-col gap-4 p-4">
+        <div className="flex items-start gap-3">
           <div
-            className="flex h-24 w-full items-center justify-center rounded-2xl border border-border bg-background p-3 dark:bg-white dark:border-white/20"
+            className="flex size-14 shrink-0 items-center justify-center rounded-xl border border-border/70 bg-background p-2.5 dark:bg-white dark:border-white/20"
             style={getPaymentMethodTileStyle(method)}
           >
             <PaymentMethodLogo method={method} />
           </div>
-          <div className="min-w-0 max-w-full">
-            {showMethodLabel ? (
-              <p className="text-xs text-muted-foreground truncate">{methodName}</p>
-            ) : null}
-            <p className="font-semibold text-base leading-tight truncate mt-1">{name}</p>
+
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <p className="truncate text-lg font-semibold leading-tight text-foreground">{name}</p>
+                  <Settings className="size-3.5 shrink-0 text-muted-foreground" />
+                </div>
+                {showMethodLabel ? (
+                  <p className="mt-0.5 truncate text-xs text-muted-foreground">{methodName}</p>
+                ) : null}
+              </div>
+
+              <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                <Badge
+                  variant={statusBadgeVariant}
+                  appearance="light"
+                  size="sm"
+                  className="h-5 gap-1 px-1.5 font-medium"
+                >
+                  {gateway?.isEnabled ? (
+                    <CircleCheck className="size-2.5" aria-hidden="true" />
+                  ) : null}
+                  {statusLabel}
+                </Badge>
+                {gateway && gateway.priority > 0 ? (
+                  <Badge variant="secondary" appearance="light" size="sm" className="h-5 px-1.5 font-medium">
+                    {t('paymentGateways.priority')}: {gateway.priority}
+                  </Badge>
+                ) : null}
+              </div>
+            </div>
+
+            <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
+              {gatewayDescription}
+            </p>
           </div>
         </div>
-
-        {description ? <p className="text-sm text-muted-foreground line-clamp-2">{description}</p> : null}
-
-        {gateway && gateway.priority > 0 && (
-          <p className="text-xs text-muted-foreground">
-            {t('paymentGateways.priority')}: {gateway.priority}
-          </p>
-        )}
-
         <Button
           type="button"
-          className="w-full bg-brand text-brand-foreground hover:bg-brand/90"
+          variant="outline"
+          className="mt-auto w-full border-border/70 bg-background text-foreground hover:bg-muted/60"
           onClick={onConfigure}
           disabled={isPending}
         >

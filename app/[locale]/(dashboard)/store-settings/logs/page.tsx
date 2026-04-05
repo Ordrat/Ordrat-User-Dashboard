@@ -1,18 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, LoaderCircle } from 'lucide-react';
+import { X, Columns3 } from 'lucide-react';
+import {
+  createColumnHelper,
+  getCoreRowModel,
+  getSortedRowModel,
+  useReactTable,
+  type SortingState,
+  type VisibilityState,
+} from '@tanstack/react-table';
 
 import { usePageMeta } from '@/hooks/use-page-meta';
 import { useLogs, type LogsParams } from '@/lib/ordrat-api/logs';
-import { LogsActionType, SourceChannel } from '@/lib/ordrat-api/schemas';
+import { LogsActionType, SourceChannel, type LogEntryResponse } from '@/lib/ordrat-api/schemas';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -20,18 +26,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { DataGrid, DataGridContainer } from '@/components/ui/data-grid';
+import { DataGridTable } from '@/components/ui/data-grid-table';
+import { DataGridPagination } from '@/components/ui/data-grid-pagination';
+import { DataGridColumnHeader } from '@/components/ui/data-grid-column-header';
+import { DataGridColumnVisibility } from '@/components/ui/data-grid-column-visibility';
 
 const PAGE_SIZES = [10, 25, 50] as const;
 const ACTION_ENTRIES = Object.entries(LogsActionType) as [string, string][];
+
+const columnHelper = createColumnHelper<LogEntryResponse>();
+
+function formatTimestamp(raw: string | null | undefined): string {
+  if (!raw) return '—';
+  try {
+    return new Date(raw).toLocaleString();
+  } catch {
+    return raw;
+  }
+}
+
+function getActionLabel(actionNum: number | null | undefined): string {
+  if (actionNum == null) return '—';
+  return LogsActionType[actionNum as keyof typeof LogsActionType] ?? String(actionNum);
+}
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -45,6 +65,8 @@ export default function LogsPage() {
   const [search, setSearch] = useState('');
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState<number>(25);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 
   const isArabic = i18n.language === 'ar';
 
@@ -58,18 +80,16 @@ export default function LogsPage() {
 
   const { data: logs, isLoading, isError } = useLogs(params);
 
-  // Client-side search filter on description/entity/shopName/branchName
-  const filtered = search.trim()
-    ? (logs ?? []).filter((l) => {
-        const q = search.toLowerCase();
-        return (
-          (l.description ?? l.message ?? '').toLowerCase().includes(q) ||
-          (l.entity ?? '').toLowerCase().includes(q) ||
-          (l.shopName ?? '').toLowerCase().includes(q) ||
-          (l.branchName ?? '').toLowerCase().includes(q)
-        );
-      })
-    : (logs ?? []);
+  const filtered = useMemo(() => {
+    if (!search.trim()) return logs ?? [];
+    const q = search.toLowerCase();
+    return (logs ?? []).filter((l) =>
+      (l.description ?? l.message ?? '').toLowerCase().includes(q) ||
+      (l.entity ?? '').toLowerCase().includes(q) ||
+      (l.shopName ?? '').toLowerCase().includes(q) ||
+      (l.branchName ?? '').toLowerCase().includes(q),
+    );
+  }, [logs, search]);
 
   function clearFilters() {
     setStartDate(null);
@@ -81,49 +101,140 @@ export default function LogsPage() {
 
   const hasFilters = !!(startDate || endDate || action !== '' || search);
 
-  function formatTimestamp(raw: string | null | undefined): string {
-    if (!raw) return '—';
-    try {
-      return new Date(raw).toLocaleString();
-    } catch {
-      return raw;
-    }
-  }
+  const hasMore = (logs?.length ?? 0) >= pageSize;
+  const estimatedPageCount = hasMore ? pageNumber + 1 : pageNumber;
+  const estimatedTotal = (pageNumber - 1) * pageSize + filtered.length;
 
-  function getActionLabel(actionNum: number | null | undefined): string {
-    if (actionNum == null) return '—';
-    return LogsActionType[actionNum as keyof typeof LogsActionType] ?? String(actionNum);
-  }
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor('shopName', {
+        header: t('logs.shopName'),
+        cell: ({ getValue }) => getValue() ?? '—',
+        enableSorting: false,
+        meta: { headerTitle: t('logs.shopName'), skeleton: <Skeleton className="h-3.5 w-24" /> },
+      }),
+      columnHelper.accessor('branchName', {
+        header: t('logs.branchName'),
+        cell: ({ getValue }) => getValue() ?? '—',
+        enableSorting: false,
+        meta: { headerTitle: t('logs.branchName'), skeleton: <Skeleton className="h-3.5 w-24" /> },
+      }),
+      columnHelper.accessor((row) => row.timestamp ?? row.createdAt, {
+        id: 'timestamp',
+        header: ({ column }) => (
+          <DataGridColumnHeader column={column} title={t('logs.timestamp')} />
+        ),
+        cell: ({ getValue }) => (
+          <span className="whitespace-nowrap tabular-nums">{formatTimestamp(getValue())}</span>
+        ),
+        enableSorting: true,
+        sortingFn: (a, b) => {
+          const aVal = a.original.timestamp ?? a.original.createdAt ?? '';
+          const bVal = b.original.timestamp ?? b.original.createdAt ?? '';
+          return aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+        },
+        meta: { headerTitle: t('logs.timestamp'), skeleton: <Skeleton className="h-3.5 w-32" /> },
+      }),
+      columnHelper.accessor((row) => row.description ?? row.message, {
+        id: 'details',
+        header: t('logs.details'),
+        cell: ({ getValue }) => (
+          <span className="text-muted-foreground max-w-xs truncate block">{getValue() ?? '—'}</span>
+        ),
+        enableSorting: false,
+        meta: { headerTitle: t('logs.details'), skeleton: <Skeleton className="h-3.5 w-48" /> },
+      }),
+      columnHelper.accessor('entity', {
+        header: t('logs.entity'),
+        cell: ({ getValue }) => getValue() ?? '—',
+        enableSorting: false,
+        meta: { headerTitle: t('logs.entity'), skeleton: <Skeleton className="h-3.5 w-20" /> },
+      }),
+      columnHelper.accessor('source', {
+        header: t('logs.source'),
+        cell: ({ getValue }) => {
+          const src = getValue();
+          return src != null
+            ? (SourceChannel[src as keyof typeof SourceChannel] ?? String(src))
+            : '—';
+        },
+        enableSorting: false,
+        meta: { headerTitle: t('logs.source'), skeleton: <Skeleton className="h-3.5 w-16" /> },
+      }),
+      columnHelper.accessor('action', {
+        header: t('logs.actionType'),
+        cell: ({ getValue }) => (
+          <Badge variant="secondary" size="sm">{getActionLabel(getValue() ?? undefined)}</Badge>
+        ),
+        enableSorting: false,
+        meta: { headerTitle: t('logs.actionType'), skeleton: <Skeleton className="h-4 w-20 rounded-full" /> },
+      }),
+    ],
+    [t],
+  );
+
+  const table = useReactTable({
+    data: filtered,
+    columns,
+    state: {
+      sorting,
+      columnVisibility,
+      pagination: { pageIndex: pageNumber - 1, pageSize },
+    },
+    onSortingChange: setSorting,
+    onColumnVisibilityChange: setColumnVisibility,
+    onPaginationChange: (updater) => {
+      const next =
+        typeof updater === 'function'
+          ? updater({ pageIndex: pageNumber - 1, pageSize })
+          : updater;
+      setPageNumber(next.pageIndex + 1);
+      setPageSize(next.pageSize);
+    },
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    manualPagination: true,
+    pageCount: estimatedPageCount,
+  });
 
   return (
-    <div className="p-6 space-y-4">
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="flex-1 min-w-[140px]">
-          <Input
-            placeholder={t('logs.search')}
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPageNumber(1); }}
-          />
-        </div>
+    <div className="min-w-0 space-y-4 py-6">
+      {/* Filters + column visibility */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Input
+          className="h-9 w-40"
+          placeholder={t('logs.search')}
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setPageNumber(1); }}
+        />
+        <DataGridColumnVisibility
+          table={table}
+          trigger={
+            <Button variant="outline" size="sm" className="h-9 gap-1.5">
+              <Columns3 className="size-4" />
+              {t('logs.columns')}
+            </Button>
+          }
+        />
         <DatePicker
           value={startDate}
           onChange={(d) => { setStartDate(d); setPageNumber(1); }}
           placeholder={t('logs.startTime')}
           locale={isArabic ? 'ar' : 'en'}
-          className="w-44"
+          className="h-9 w-40"
         />
         <DatePicker
           value={endDate}
           onChange={(d) => { setEndDate(d); setPageNumber(1); }}
           placeholder={t('logs.endTime')}
           locale={isArabic ? 'ar' : 'en'}
-          className="w-44"
+          className="h-9 w-40"
         />
         <Select
           value={action === '' ? 'all' : String(action)}
           onValueChange={(v) => { setAction(v === 'all' ? '' : Number(v)); setPageNumber(1); }}
         >
-          <SelectTrigger className="w-44">
+          <SelectTrigger className="h-9 w-40">
             <SelectValue placeholder={t('logs.allActions')} />
           </SelectTrigger>
           <SelectContent>
@@ -136,107 +247,30 @@ export default function LogsPage() {
           </SelectContent>
         </Select>
         {hasFilters && (
-          <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1 text-muted-foreground">
+          <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9 gap-1 text-muted-foreground">
             <X className="w-3.5 h-3.5" />
             {t('logs.clearFilters')}
           </Button>
         )}
       </div>
 
-      {/* Results table */}
-      <Card>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="p-10 flex justify-center">
-              <LoaderCircle className="size-6 animate-spin text-brand" />
-            </div>
-          ) : isError ? (
-            <div className="p-6 text-center text-destructive">{t('logs.loadError')}</div>
-          ) : filtered.length === 0 ? (
-            <div className="p-10 text-center text-muted-foreground">{t('logs.emptyState')}</div>
-          ) : (
-            <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('logs.shopName')}</TableHead>
-                  <TableHead>{t('logs.branchName')}</TableHead>
-                  <TableHead className="whitespace-nowrap">{t('logs.timestamp')}</TableHead>
-                  <TableHead>{t('logs.details')}</TableHead>
-                  <TableHead>{t('logs.entity')}</TableHead>
-                  <TableHead>{t('logs.source')}</TableHead>
-                  <TableHead>{t('logs.actionType')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((log, idx) => (
-                  <TableRow key={log.id ?? idx}>
-                    <TableCell className="text-sm">{log.shopName ?? '—'}</TableCell>
-                    <TableCell className="text-sm">{log.branchName ?? '—'}</TableCell>
-                    <TableCell className="text-sm whitespace-nowrap">
-                      {formatTimestamp(log.timestamp ?? log.createdAt)}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
-                      {log.description ?? log.message ?? '—'}
-                    </TableCell>
-                    <TableCell className="text-sm">{log.entity ?? '—'}</TableCell>
-                    <TableCell className="text-sm">
-                      {log.source != null
-                        ? (SourceChannel[log.source as keyof typeof SourceChannel] ?? String(log.source))
-                        : '—'}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">
-                        {getActionLabel(log.action ?? undefined)}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Pagination */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Label>{t('logs.pageSize')}</Label>
-          <Select
-            value={String(pageSize)}
-            onValueChange={(v) => { setPageSize(Number(v)); setPageNumber(1); }}
-          >
-            <SelectTrigger className="w-20">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {PAGE_SIZES.map((s) => (
-                <SelectItem key={s} value={String(s)}>{s}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPageNumber((p) => Math.max(1, p - 1))}
-            disabled={pageNumber <= 1}
-          >
-            ‹
-          </Button>
-          <span className="text-sm px-2">{pageNumber}</span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPageNumber((p) => p + 1)}
-            disabled={!logs || logs.length < pageSize}
-          >
-            ›
-          </Button>
-        </div>
-      </div>
+      {/* DataGrid */}
+      <DataGrid
+        table={table}
+        recordCount={estimatedTotal}
+        isLoading={isLoading}
+        loadingMode="skeleton"
+        emptyMessage={isError ? t('logs.loadError') : t('logs.emptyState')}
+        tableLayout={{ dense: true, stripped: true, rowBorder: false, width: 'auto' }}
+      >
+        <DataGridContainer>
+          <DataGridTable />
+        </DataGridContainer>
+        <DataGridPagination
+          sizes={[...PAGE_SIZES]}
+          className="px-4 py-3 border-t border-border"
+        />
+      </DataGrid>
     </div>
   );
 }
